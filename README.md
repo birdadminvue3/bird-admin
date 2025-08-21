@@ -1,6 +1,6 @@
 <br />
 <div align="center">
-    <img src="./readme/logo.png" alt="" />
+    <img src="./src/assets/readme/logo.png" alt="" />
     <h1 style="font-size: 36px;color: #2c3e50;font-weight: 600;margin: 0 0 6px 0;">BirdAdmin</h1>
     <p style="font-size: 17px;color: #6a8bad;margin-bottom: 10px;">使用流行技术栈快速创建商业级后台管理系统</p>
     <a href="https://gitee.com/web_akai/birdadmin" target="_blank">Gitee仓库</a>
@@ -94,8 +94,8 @@ pnpm run build
 群号：829514092
 
 ### 联系我们
-- [演示站](https://gitee.com/web_akai/birdadmin) 账户：`admin`，密码：`123456`（演示站数据无法修改，请下载源码安装体验全部功能）
-- [Gitee仓库](https://gitee.com/web_akai/birdadmin)
+- [演示站](https://gitee.com/web_akai/bird-admin) 账户：`admin`，密码：`123456`（演示站数据无法修改，请下载源码安装体验全部功能）
+- [Gitee仓库](https://gitee.com/web_akai/bird-admin)
 - [官方邮箱 web_bird@qq.com](mailto:web_bird@qq.com)
 
 ### 项目预览
@@ -127,4 +127,4 @@ pnpm run build
 本项目包含的第三方源码和二进制文件之版权信息另行标注。
 
 ### 支持项目
-💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望你可以去 [Gitee](https://gitee.com/web_akai/birdadmin) 帮我们点个 ⭐ Star，这将是对我们极大的鼓励与支持。
+💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望你可以去 [Gitee](https://gitee.com/web_akai/bird-admin.git) 帮我点个 ⭐ Star，这将是对我极大的鼓励与支持。
