@@ -1,5 +1,6 @@
-import { ComponentSize,  ThemeMode } from "@/enums/index";
+import { ComponentSize,  ThemeMode, LanguageEnum } from "@/enums/index";
 const { pkg } = __APP_INFO__;
+console.log('pkg=========', pkg);
 
 // 检查用户的操作系统是否使用深色模式
 const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
@@ -13,6 +14,8 @@ export const defaultSettings: AppSettings = {
   theme: mediaQueryList.matches ? ThemeMode.DARK : ThemeMode.LIGHT,
   // 组件大小 default | medium | small | large
   size: ComponentSize.DEFAULT,
+  // 语言
+  language: LanguageEnum.ZH_CN,
   // 是否显示水印
   showWatermark: false,
   // 水印内容

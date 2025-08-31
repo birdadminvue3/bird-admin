@@ -3,7 +3,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 export function configAutoImportPlugin() {
   return AutoImport({
-    imports: ['vue', 'vue-router', '@vueuse/core', 'pinia'],
+    imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', "vue-i18n"],
     resolvers: [ElementPlusResolver()],
     dts: 'src/types/auto-imports.d.ts',
     eslintrc: {

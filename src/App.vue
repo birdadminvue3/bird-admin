@@ -9,6 +9,7 @@ const settingStore = useSettingStoreHook();
 const locale = computed(() => appStore.locale);
 const size = computed(() => appStore.size as ComponentSize);
 const showWatermark = computed(() => settingStore.showWatermark);
+console.log('showWatermark',showWatermark.value);
 
 // 明亮/暗黑主题水印字体颜色适配
 const fontColor = computed(() => {
@@ -18,12 +19,12 @@ const fontColor = computed(() => {
 
 <template>
   <el-config-provider :locale="locale" :size="size">
-<!-- 开启水印 -->
+    <!-- 开启水印 -->
     <el-watermark
       :font="{ color: fontColor }"
       :content="showWatermark ? defaultSettings.watermarkContent : ''"
       :z-index="9999"
-      class="wh-full"
+      class="app"
     >
       <router-view />
     </el-watermark>
@@ -31,5 +32,8 @@ const fontColor = computed(() => {
 </template>
 
 <style scoped>
-
+.app{
+  width: 100vw;
+  height: 100vh;
+}
 </style>

@@ -11,7 +11,7 @@ export type appType = {
 export const useAppStore = defineStore("bird-app", {
   state: (): appType => ({
     // 语言
-    locale:useStorage("language", defaultSettings.language),
+    locale: useStorage("language", defaultSettings.language),
     // 布局大小
     size: useStorage("size", defaultSettings.size),
   }),
