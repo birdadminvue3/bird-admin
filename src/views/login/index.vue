@@ -3,35 +3,36 @@
     <!-- 右侧切换主题、语言按钮  -->
     <div class="action-bar">
       <el-tooltip :content="t('login.themeToggle')" placement="bottom">
-      <!-- <el-tooltip :content="'主题切换'" placement="bottom"> -->
-1
+        <CommonWrapper>
+          <DarkModeSwitch />
+        </CommonWrapper>
       </el-tooltip>
-      <!-- <el-tooltip :content="t('login.languageToggle')" placement="bottom"> -->
-      <el-tooltip content="语言切换" placement="bottom">
-2
+      <el-tooltip :content="t('login.languageToggle')" placement="bottom">
+        <LangSelect size="text-20px" />
       </el-tooltip>
     </div>
     <div class="container">
       <!-- 登录页主体 -->
       <div flex-1 flex-center>
         <div
-          class="login-form"
+          class="p-4xl w-full h-auto sm:w-450px border-rd-10px sm:h-480px shadow-[var(--el-box-shadow-light)] backdrop-blur-3px bg-#fff"
         >
-        <div class="w-full flex flex-col items-center">
+        <div w-full flex flex-col items-center>
             <!-- logo -->
             <el-image :src="logo" style="width: 84px" />
 
             <!-- 标题 -->
             <h2>
-              <el-badge  type="success">
-                123
-              </el-badge>
+              <el-badge :value="`v ${defaultSettings.version}`" type="success">
+              {{ defaultSettings.title }}
+            </el-badge>
             </h2>
 
             <!-- 组件切换 -->
             <!-- <transition name="fade-slide" mode="out-in"> -->
-              <h3 text-center m-0 mb-20px>123</h3>
+              <h3 text-center m-0 mb-20px>{{ t("login.login") }}</h3>
               <el-form
+                class="w-90%"
                 ref="loginFormRef"
                 :model="loginFormData"
                 :rules="loginRules"
@@ -40,8 +41,8 @@
               >
                 <!-- 用户名 -->
                 <el-form-item prop="username">
-                  <!-- <el-input v-model.trim="loginFormData.username" :placeholder="t('login.username')"> -->
-                  <el-input v-model.trim="loginFormData.username" placeholder="用户名">
+                  <!-- <el-input v-model.trim="loginFormData.username" placeholder="用户名">-->
+                    <el-input v-model.trim="loginFormData.username" :placeholder="t('login.username')">
                     <template #prefix>
                       <el-icon><User /></el-icon>
                     </template>
@@ -134,6 +135,9 @@
 
 import type { FormInstance } from "element-plus";
 import logo from "@/assets/login/logo.png";
+import { defaultSettings } from "@/config/index";
+import CommonWrapper from "@/components/CommonWrapper/index.vue";
+import DarkModeSwitch from "@/components/DarkModeSwitch/index.vue";
 
 const { t } = useI18n();
 /** 登录表单数据 */
@@ -169,18 +173,18 @@ const loginRules = computed(() => {
       {
         required: true,
         trigger: "blur",
-        // message: t("login.message.username.required"),
+        message: t("login.message.username.required"),
       },
     ],
     password: [
       {
         required: true,
         trigger: "blur",
-        // message: t("login.message.password.required"),
+        message: t("login.message.password.required"),
       },
       {
         min: 6,
-        // message: t("login.message.password.min"),
+        message: t("login.message.password.min"),
         trigger: "blur",
       },
     ],
@@ -188,7 +192,7 @@ const loginRules = computed(() => {
       {
         required: true,
         trigger: "blur",
-        // message: t("login.message.captchaCode.required"),
+        message: t("login.message.captchaCode.required"),
       },
     ],
   };
@@ -260,7 +264,7 @@ function checkCapsLock(event: KeyboardEvent) {
     align-items: center;
     justify-content: center;
     font-size: 1.125rem;
-// z-index: 9;
+    // z-index: 9;
     @media (max-width: 480px) {
       top: 10px;
       right: auto;
@@ -274,12 +278,12 @@ function checkCapsLock(event: KeyboardEvent) {
   }
   .container{
     z-index: 9;
-    background: #fff;
     .login-form{
-      min-width: 450px;
+      background: #fff;
+      min-width: 300px;
       height: auto;
-      min-height: 580px;
-      padding: 20px;
+      min-height: 380px;
+      padding: 10px;
       box-shadow: var(--el-box-shadow-light);
       border-radius: 10px;
     }

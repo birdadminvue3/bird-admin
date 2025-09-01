@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { defaultSettings } from "@/config/index";
 import { store } from "@/store";
+import { ThemeMode } from '@/enums/settings/theme'
 
 type settingType = {
   title: string;
@@ -19,6 +20,9 @@ export const useSettingStore = defineStore("bird-setting",{
     },
   },
   actions: {
+    updateTheme(newTheme: ThemeMode) {
+      this.theme = newTheme;
+    },
   }
 });
 

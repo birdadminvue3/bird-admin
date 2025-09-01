@@ -6,12 +6,13 @@ import { store } from "@/store";
 
 export type appType = {
   layolocaleut: string;
+  language: string;
   size: string;
 };
 export const useAppStore = defineStore("bird-app", {
   state: (): appType => ({
     // 语言
-    locale: useStorage("language", defaultSettings.language),
+    language: useStorage("language", defaultSettings.language),
     // 布局大小
     size: useStorage("size", defaultSettings.size),
   }),
