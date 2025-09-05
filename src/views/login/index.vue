@@ -15,102 +15,95 @@
       <!-- 登录页主体 -->
       <div flex-1 flex-center>
         <div
-          class="p-4xl w-full h-auto sm:w-450px border-rd-10px sm:h-480px shadow-[var(--el-box-shadow-light)] backdrop-blur-3px bg-#fff"
+          class="p-4xl w-full h-auto sm:w-400px border-rd-10px sm:h-480px shadow-[var(--el-box-shadow-light)] backdrop-blur-3px bg-#fff"
         >
         <div w-full flex flex-col items-center>
             <!-- logo -->
             <el-image :src="logo" style="width: 84px" />
-
             <!-- 标题 -->
             <h2>
               <el-badge :value="`v ${defaultSettings.version}`" type="success">
               {{ defaultSettings.title }}
             </el-badge>
             </h2>
+            <h3 text-center m-0 mb-20px>{{ t("login.login") }}</h3>
+            <el-form
+              class="w-90%"
+              ref="loginFormRef"
+              :model="loginFormData"
+              :rules="loginRules"
+              size="large"
+              :validate-on-rule-change="false"
+            >
+              <!-- 用户名 -->
+              <el-form-item prop="username">
+                  <el-input v-model.trim="loginFormData.username" :placeholder="t('login.username')">
+                  <template #prefix>
+                    <el-icon><User /></el-icon>
+                  </template>
+                </el-input>
+              </el-form-item>
 
-            <!-- 组件切换 -->
-            <!-- <transition name="fade-slide" mode="out-in"> -->
-              <h3 text-center m-0 mb-20px>{{ t("login.login") }}</h3>
-              <el-form
-                class="w-90%"
-                ref="loginFormRef"
-                :model="loginFormData"
-                :rules="loginRules"
-                size="large"
-                :validate-on-rule-change="false"
-              >
-                <!-- 用户名 -->
-                <el-form-item prop="username">
-                  <!-- <el-input v-model.trim="loginFormData.username" placeholder="用户名">-->
-                    <el-input v-model.trim="loginFormData.username" :placeholder="t('login.username')">
+              <!-- 密码 -->
+              <el-tooltip :visible="isCapsLock" :content="t('login.capsLock')" placement="right">
+                <el-form-item prop="password">
+                  <el-input
+                    v-model.trim="loginFormData.password"
+                    :placeholder="t('login.password')"
+                    type="password"
+                    show-password
+                    @keyup="checkCapsLock"
+                    @keyup.enter="handleLoginSubmit"
+                  >
                     <template #prefix>
-                      <el-icon><User /></el-icon>
+                      <el-icon><Lock /></el-icon>
                     </template>
                   </el-input>
                 </el-form-item>
+              </el-tooltip>
 
-                <!-- 密码 -->
-                <el-tooltip :visible="isCapsLock" content="密码" placement="right">
-                <!-- <el-tooltip :visible="isCapsLock" :content="t('login.capsLock')" placement="right"> -->
-                  <el-form-item prop="password">
-                    <el-input
-                      v-model.trim="loginFormData.password"
-                      placeholder="密码"
-                      type="password"
-                      show-password
-                      @keyup="checkCapsLock"
-                      @keyup.enter="handleLoginSubmit"
-                    >
-                      <template #prefix>
-                        <el-icon><Lock /></el-icon>
-                      </template>
-                    </el-input>
-                  </el-form-item>
-                </el-tooltip>
+              <!-- 验证码 -->
+              <!-- <el-form-item prop="captchaCode">
+                <div flex>
+                  <el-input
+                    v-model.trim="loginFormData.captchaCode"
+                    :placeholder="t('login.captchaCode')"
+                    @keyup.enter="handleLoginSubmit"
+                  >
+                    <template #prefix>
+                      <div class="i-svg:captcha" />
+                    </template>
+                  </el-input>
+                  <div cursor-pointer h="[40px]" w="[120px]" flex-center ml-10px @click="getCaptcha">
+                    <el-icon v-if="codeLoading" class="is-loading"><Loading /></el-icon>
 
-                <!-- 验证码 -->
-                <!-- <el-form-item prop="captchaCode">
-                  <div flex>
-                    <el-input
-                      v-model.trim="loginFormData.captchaCode"
-                      :placeholder="t('login.captchaCode')"
-                      @keyup.enter="handleLoginSubmit"
-                    >
-                      <template #prefix>
-                        <div class="i-svg:captcha" />
-                      </template>
-                    </el-input>
-                    <div cursor-pointer h="[40px]" w="[120px]" flex-center ml-10px @click="getCaptcha">
-                      <el-icon v-if="codeLoading" class="is-loading"><Loading /></el-icon>
-
-                      <img
-                        v-else
-                        object-cover
-                        border-rd-4px
-                        p-1px
-                        shadow="[0_0_0_1px_var(--el-border-color)_inset]"
-                        :src="captchaBase64"
-                        alt="code"
-                      />
-                    </div>
+                    <img
+                      v-else
+                      object-cover
+                      border-rd-4px
+                      p-1px
+                      shadow="[0_0_0_1px_var(--el-border-color)_inset]"
+                      :src="captchaBase64"
+                      alt="code"
+                    />
                   </div>
-                </el-form-item> -->
+                </div>
+              </el-form-item> -->
 
-                <!-- <div class="flex-x-between w-full">
-                  <el-checkbox v-model="loginFormData.rememberMe">{{ t("login.rememberMe") }}</el-checkbox>
-                  <el-link type="primary" underline="never" @click="toOtherForm('resetPwd')">
-                    {{ t("login.forgetPassword") }}
-                  </el-link>
-                </div> -->
+              <!-- <div class="flex-x-between w-full">
+                <el-checkbox v-model="loginFormData.rememberMe">{{ t("login.rememberMe") }}</el-checkbox>
+                <el-link type="primary" underline="never" @click="toOtherForm('resetPwd')">
+                  {{ t("login.forgetPassword") }}
+                </el-link>
+              </div> -->
 
-                <!-- 登录按钮 -->
-                <el-form-item>
-                  <el-button :loading="loading" type="primary" class="w-full" @click="handleLoginSubmit">
-                    登录
-                  </el-button>
-                </el-form-item>
-              </el-form>
-            <!-- </transition> -->
+              <!-- 登录按钮 -->
+              <el-form-item>
+                <el-button :loading="loading" type="primary" class="w-full" @click="handleLoginSubmit">
+                  {{ t("login.login") }}
+                </el-button>
+              </el-form-item>
+            </el-form>
           </div>
         </div>
       </div>
@@ -378,4 +371,5 @@ function checkCapsLock(event: KeyboardEvent) {
     }
   }
 }
+
 </style>

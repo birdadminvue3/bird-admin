@@ -9,7 +9,6 @@ const settingStore = useSettingStoreHook();
 const locale = computed(() => appStore.locale);
 const size = computed(() => appStore.size as ComponentSize);
 const showWatermark = computed(() => settingStore.showWatermark);
-console.log('showWatermark',showWatermark.value);
 
 // 明亮/暗黑主题水印字体颜色适配
 const fontColor = computed(() => {

@@ -7,11 +7,11 @@ import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
 import { configInfoPlugin } from './info';                // 自定义插件 问候语，打包检测用时、大小
 import { configAutoImportPlugin } from './autoImport';    // 'vue', 'vue-router', '@vueuse/core', 'pinia'
 import { configMockPlugin } from './mock';                // mock支持仅用于本地开发，生产环境请务必删除 mock
+
 import svgLoader from "vite-svg-loader";                  // svg组件化支持
 import UnoCSS from 'unocss/vite'                          // UnoCSS 即时按需原子化 CSS 引擎
 
 export function createVitePlugins(_isBuild = false, configEnv: ConfigEnv) {
-
   const vitePlugins: PluginOption[] = [];
 
   vitePlugins.push(

@@ -12,8 +12,6 @@ export function createViteResolve(_mode: string, myDirname: string): myResolveOp
       '@': `${path.resolve(myDirname, 'src')}`,
       '@/': resolvePath(myDirname,'./src/'),
       '@styles': resolvePath(myDirname,'./src/assets/styles'),
-      // '@locales': resolvePath(myDirname,'locales'),
-      // '@icons': resolvePath(myDirname,'./src/assets/icons'),
     },
     // 导入时想要省略的扩展名列表。注意，不 建议忽略自定义导入类型的扩展名（例如：.vue），因为它会干扰 IDE 和类型支持。
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],
