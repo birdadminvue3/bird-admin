@@ -125,26 +125,23 @@
 </template>
 
 <script setup lang="ts">
-
 import type { FormInstance } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
 import logo from "@/assets/login/logo.png";
 import { defaultSettings } from "@/config/index";
 import CommonWrapper from "@/components/CommonWrapper/index.vue";
 import DarkModeSwitch from "@/components/DarkModeSwitch/index.vue";
+import { useUserStoreHook } from "@/store";
+import toastManager from "@/utils/request/toast";
 
 const { t } = useI18n();
-/** 登录表单数据 */
-export interface LoginFormData {
-  /** 用户名 */
+const route = useRoute();
+const router = useRouter();
+const userStore = useUserStoreHook();
+
+interface LoginFormData {
   username: string;
-  /** 密码 */
   password: string;
-  /** 验证码缓存key */
-  captchaKey: string;
-  /** 验证码 */
-  captchaCode: string;
-  /** 记住我 */
-  // rememberMe: boolean;
 }
 
 const loginFormRef = ref<FormInstance>();
@@ -152,84 +149,46 @@ const loading = ref(false);
 // 是否大写锁定
 const isCapsLock = ref(false);
 
+// 仅开发环境预填演示账号，生产环境保持空白
 const loginFormData = ref<LoginFormData>({
-  username: "admin",
-  password: "123456",
-  captchaKey: "",
-  captchaCode: "",
-  // rememberMe,
+  username: import.meta.env.DEV ? "admin" : "",
+  password: import.meta.env.DEV ? "123456" : "",
 });
 
-const loginRules = computed(() => {
-  return {
-    username: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.username.required"),
-      },
-    ],
-    password: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.password.required"),
-      },
-      {
-        min: 6,
-        message: t("login.message.password.min"),
-        trigger: "blur",
-      },
-    ],
-    captchaCode: [
-      {
-        required: true,
-        trigger: "blur",
-        message: t("login.message.captchaCode.required"),
-      },
-    ],
-  };
-});
+const loginRules = computed(() => ({
+  username: [
+    { required: true, trigger: "blur", message: t("login.message.username.required") },
+  ],
+  password: [
+    { required: true, trigger: "blur", message: t("login.message.password.required") },
+    { min: 6, message: t("login.message.password.min"), trigger: "blur" },
+  ],
+}));
 
-/**
- * 登录提交
- */
+/** 登录提交：表单校验 → 请求 → 持久化 token → 跳转 */
 async function handleLoginSubmit() {
+  const valid = await loginFormRef.value?.validate().catch(() => false);
+  if (!valid) return;
+
+  loading.value = true;
   try {
-    // 1. 表单验证
-    const valid = await loginFormRef.value?.validate();
-    if (!valid) return;
-
-    loading.value = true;
-
-  //   // 2. 执行登录
-  //   await userStore.login(loginFormData.value);
-
-  //   // 3. 获取用户信息（包含用户角色，用于路由生成）
-  //   await userStore.getUserInfo();
-
-  //   // 4. 登录成功，简单跳转，让路由守卫处理后续逻辑
-  //   const redirectPath = (route.query.redirect as string) || "/";
-
-  //   // 使用push而不是replace，避免与路由守卫冲突
-  //   await router.push(decodeURIComponent(redirectPath));
-  // } catch (error) {
-  //   // 5. 统一错误处理
-  //   getCaptcha(); // 刷新验证码
-  //   console.error("登录失败:", error);
+    await userStore.login({ ...loginFormData.value });
+    toastManager.success("登录成功");
+    const redirect = (route.query.redirect as string) || "/";
+    await router.push(redirect);
+  } catch (error) {
+    toastManager.error((error as Error)?.message || "登录失败，请检查账号密码");
   } finally {
     loading.value = false;
   }
 }
 
-// 检查输入大小写
 function checkCapsLock(event: KeyboardEvent) {
   // 防止浏览器密码自动填充时报错
   if (event instanceof KeyboardEvent) {
     isCapsLock.value = event.getModifierState("CapsLock");
   }
 }
-
 </script>
 
 <style lang="scss" scoped>

@@ -1,33 +1,19 @@
-// https://cn.vitejs.dev/guide/env-and-mode
+/// <reference types="vite/client" />
 
-// TypeScript 类型提示都为 string： https://github.com/vitejs/vite/issues/6930
+// Vite 环境变量统一声明；__APP_INFO__ 已在 global.d.ts 中声明，此处不再重复
 interface ImportMetaEnv {
-  /** 开发环境读取配置文件路径 */
-  VITE_BASE_PATH: number;
-  /** 端口号 */
-  VITE_PORT: number;
-  /** 端口号 */
-  VITE_API_URL: string;
-  /** API 地址前缀 */
-  VITE_API_URL: string;
+  /** 打包基础路径 */
+  readonly VITE_BASE_PATH: string;
+  /** 开发服务器端口 */
+  readonly VITE_PORT: string;
+  /** 接口基础地址，例如 /api 或完整域名 */
+  readonly VITE_API_BASE_URL: string;
+  /** 开发代理目标，留空表示不启用代理（走本地 mock） */
+  readonly VITE_API_PROXY_TARGET: string;
+  /** 生产构建是否移除 console */
+  readonly VITE_DROP_CONSOLE: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-/**
- * 平台的名称、版本、运行所需的`node`版本、依赖、构建时间的类型提示
- */
-declare const __APP_INFO__: {
-  pkg: {
-    name: string;
-    version: string;
-    engines: {
-      node: string;
-    };
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-  };
-  buildTimestamp: number;
-};

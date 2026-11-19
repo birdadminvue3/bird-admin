@@ -3,7 +3,7 @@
     <img src="./src/assets/readme/logo.png" alt="" />
     <h1 style="font-size: 36px;color: #2c3e50;font-weight: 600;margin: 0 0 6px 0;">BirdAdmin</h1>
     <p style="font-size: 17px;color: #6a8bad;margin-bottom: 10px;">使用流行技术栈快速创建商业级后台管理系统</p>
-    <a href="https://gitee.com/web_akai/birdadmin" target="_blank">Gitee仓库</a>
+    <a href="https://gitee.com/web_akai/bird-admin" target="_blank">Gitee仓库</a>
 </div>
 <br />
 <p align="center">
@@ -48,7 +48,7 @@ img
 除了基于 `Node.js` 前后端分离架构外，我们的 `Vue3` 使用了 `setup、useTemplateRef` 等，状态管理使用 `Pinia`，并使用了 `TypeScript、Vite` 等可以为你的知识面添砖加瓦的技术栈。使用流行技术栈自然代表本框架兼容相关（Vue3+Nodejs+Koa2）生态，生态系统内数不清的库、包、组件，能够使您的开发事半功倍。
 
 **🔀 前后端分离：**
-项目的 `web` 文件夹内包含： `干净`（不含后端代码）、`完整`（所有前端代码文件均在此内）的前端代码文件，代码和部署均可前后分离，对前端开发者友好，作为纯前端开发者，您可以将 BAdmin 当做学习与资源的社群，本系统可为您准备好案例和模板等所需要的环境，而您只需专注于学习或工作，不需要会任何后端代码！（邀您：[和我们一起](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=paVQA1dlpsVNHTla-ZAts6e4pPK4va9R&authKey=Eto0dq9DOuYldJPl6URFAXXHlG2AFQtPUBxNHEByEiuSg9OraxMniXIaWFt46OKi&noverify=0&group_code=1039646575) ）
+项目的 `web` 文件夹内包含： `干净`（不含后端代码）、`完整`（所有前端代码文件均在此内）的前端代码文件，代码和部署均可前后分离，对前端开发者友好，作为纯前端开发者，您可以将 BAdmin 当做学习与资源的社群，本系统可为您准备好案例和模板等所需要的环境，而您只需专注于学习或工作，不需要会任何后端代码！（邀您：[和我们一起](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=paVQA1dlpsVNHTla-ZAts6e4pPK4va9R&authKey=Eto0dq9DOuYldJPl6URFAXXHlG2AFQtPUBxNHEByEiuSg9OraxMniXIaWFt46OKi&noverify=0&group_code=829514092) ）
 
 
 **✨ 高颜值：**
@@ -95,7 +95,7 @@ pnpm run build
 
 ### 联系我们
 - [演示站](https://gitee.com/web_akai/bird-admin) 账户：`admin`，密码：`123456`（演示站数据无法修改，请下载源码安装体验全部功能）
-- [Gitee仓库](https://gitee.com/web_akai/bird-admin)
+- [Gitee仓库](hhttps://gitee.com/web_akai/bird-admin)
 - [官方邮箱 web_bird@qq.com](mailto:web_bird@qq.com)
 
 ### 项目预览
@@ -128,3 +128,28 @@ pnpm run build
 
 ### 支持项目
 💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望你可以去 [Gitee](https://gitee.com/web_akai/bird-admin.git) 帮我点个 ⭐ Star，这将是对我极大的鼓励与支持。
+
+### 当前实现状态（2026-11-19）
+
+> 本仓库目前是**前端脚手架**。上文的「ThinkPHP8 后端、三种布局、可视化权限管理、无限子级权限分组」属于规划能力，尚未实现。
+
+已可用：
+
+- Vue3 + Vite + TypeScript + Pinia + Element Plus 工程与生产构建
+- 登录页与本地 mock 登录（`admin` / `123456`，**仅 dev 生效**，生产构建不注入 mock）
+- 基于 token 的路由守卫；`src/utils/request` 请求封装（loading、取消重复请求、401 刷新、离线队列、文件下载）
+- RBAC 权限管理与本地 mock 接口（仅 dev 生效）：菜单/角色/用户/部门/岗位/字典、按钮级权限、按用户权限下发动态路由
+  - 菜单：`控制台 /dashboard`、`系统管理 /system`，子菜单 `菜单管理 /system/menu`、`角色管理 /system/role`、`用户管理 /system/user`、`部门管理 /system/dept`、`岗位管理 /system/post`、`字典管理 /system/dict`
+  - 演示账号：`admin/123456`（超管，全部菜单）、`system/123456`（系统管理员，无岗位/字典）、`auditor/123456`（只读用户列表）、`guest/123456`（仅控制台）
+  - 接口前缀 `/api`，统一返回 `{ code, data, message }`；除登录/刷新外均需 `Authorization: Bearer <token>`
+  - 路由树：`GET /auth/routes`；各资源列表：`GET /menu/tree`、`/role/list`、`/user/list`、`/dept/tree`、`/post/list`、`/dict/type/list`、`/dict/data/list`
+  - 授权接口：`PUT /role/:id/permissions`、`PUT /user/:id/roles`；权限标识形如 `system:user:add`，超管为 `*:*:*`
+  - mock 数据存放在 `globalThis`，开发期 CRUD 在同一进程内共享；重启 dev 后恢复种子数据
+
+接入真实后端：
+
+- 在 `.env.production` 配置 `VITE_API_BASE_URL`（接口 url 相对该地址，不要自带 `/api` 前缀）
+- 实现 `/login`、`/auth/refresh-token` 等接口，统一返回 `{ code, data, message }`，成功码为 `200` 或 `0`
+- 需要本地代理时配置 `VITE_API_PROXY_TARGET`，留空则走 `mock/`
+
+常用命令：`pnpm dev` / `pnpm build` / `pnpm typecheck` / `pnpm lint`

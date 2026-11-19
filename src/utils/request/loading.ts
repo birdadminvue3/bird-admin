@@ -1,12 +1,8 @@
-// loading 管理
+// loading 管理：引用计数，避免并发请求闪烁
 import { ElLoading } from 'element-plus';
 import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading';
 import type { RequestOptions } from './types';
 
-/**
- * Loading管理类
- * 支持配置化和计数功能，防止多个请求导致的闪烁问题
- */
 class LoadingManager {
   private loadingInstance: LoadingInstance | null = null;
   private count = 0;
@@ -14,41 +10,32 @@ class LoadingManager {
     text: '加载中...',
     background: 'rgba(0, 0, 0, 0.7)',
     fullscreen: true,
-    lock: true
+    lock: true,
   };
 
-  /**
-   * 显示loading
-   * @param options 自定义配置选项
-   */
   public show(options?: RequestOptions): void {
     if (this.count === 0) {
-      const loadingOptions = {
+      this.loadingInstance = ElLoading.service({
         text: options?.loadingText || this.defaultOptions.text,
         background: options?.loadingOptions?.background || this.defaultOptions.background,
-        fullscreen: options?.loadingOptions?.fullscreen !== undefined 
-          ? options.loadingOptions.fullscreen 
-          : this.defaultOptions.fullscreen,
-        lock: options?.loadingOptions?.lock !== undefined 
-          ? options.loadingOptions.lock 
-          : this.defaultOptions.lock
-      };
-      
-      this.loadingInstance = ElLoading.service(loadingOptions);
+        fullscreen:
+          options?.loadingOptions?.fullscreen !== undefined
+            ? options.loadingOptions.fullscreen
+            : this.defaultOptions.fullscreen,
+        lock:
+          options?.loadingOptions?.lock !== undefined
+            ? options.loadingOptions.lock
+            : this.defaultOptions.lock,
+      });
     }
     this.count++;
   }
 
-  /**
-   * 隐藏loading
-   */
   public hide(): void {
     if (this.count <= 0) return;
-    
     this.count--;
     if (this.count === 0) {
       setTimeout(() => {
-        // 延迟关闭，防止闪烁
         if (this.count === 0 && this.loadingInstance) {
           this.loadingInstance.close();
           this.loadingInstance = null;
@@ -57,20 +44,15 @@ class LoadingManager {
     }
   }
 
-  /**
-   * 强制隐藏所有loading
-   */
   public forceHide(): void {
+    // 无论是否有实例都要把计数归零，否则后续计数会持续偏移
+    this.count = 0;
     if (this.loadingInstance) {
-      this.count = 0;
       this.loadingInstance.close();
       this.loadingInstance = null;
     }
   }
-  
-  /**
-   * 获取当前loading状态
-   */
+
   public isLoading(): boolean {
     return this.count > 0;
   }

@@ -11,7 +11,7 @@ import { configMockPlugin } from './mock';                // mock支持仅用于
 import svgLoader from "vite-svg-loader";                  // svg组件化支持
 import UnoCSS from 'unocss/vite'                          // UnoCSS 即时按需原子化 CSS 引擎
 
-export function createVitePlugins(_isBuild = false, configEnv: ConfigEnv) {
+export function createVitePlugins(_isBuild = false, _configEnv: ConfigEnv) {
   const vitePlugins: PluginOption[] = [];
 
   vitePlugins.push(
@@ -33,7 +33,7 @@ export function createVitePlugins(_isBuild = false, configEnv: ConfigEnv) {
   );
   vitePlugins.push(configInfoPlugin());          // 自定义插件 问候语，打包检测用时、大小
   vitePlugins.push(configAutoImportPlugin());    // 'vue', 'vue-router', '@vueuse/core', 'pinia'
-  vitePlugins.push(configMockPlugin());          // mock支持仅用于本地开发，生产环境请务必删除 mock
+  vitePlugins.push(configMockPlugin(_isBuild)); // mock 仅在 dev 生效
   vitePlugins.push(svgLoader());                 // svg组件化支持
 
   return vitePlugins;

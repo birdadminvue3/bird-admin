@@ -4,6 +4,9 @@ import type { RouteComponent, RouteLocationNormalized } from "vue-router";
 import type { FunctionalComponent } from "vue";
 
 declare global {
+  // 项目未安装 @iconify/types，这里给出结构占位，避免类型声明悬空
+  type IconifyIcon = Record<string, unknown>;
+
   interface ToRouteType extends RouteLocationNormalized {
     meta: CustomizeRouteMeta;
   }

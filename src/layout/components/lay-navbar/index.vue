@@ -1,5 +1,5 @@
 <template>
   <div>
-   lay-navbar
+  lay-navbar
   </div>
 </template>

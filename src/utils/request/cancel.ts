@@ -1,69 +1,69 @@
 // 取消请求控制器
 import type { CustomInternalAxiosRequestConfig } from './types';
-import axios from 'axios';
 
 /**
- * 请求取消控制器类
- * 用于管理和取消重复或未完成的请求
+ * 管理重复请求与手动取消。
+ * 关键修复：removePending 只清理「自己」的 controller，不再无条件 abort，
+ * 否则同 key 的后发请求会被先发请求的响应误杀。
  */
 class AxiosCanceler {
-  // 存储请求与取消令牌的Map
   private pendingMap = new Map<string, AbortController>();
 
-  /**
-   * 生成请求的唯一标识
-   * @param config 请求配置
-   * @returns 唯一标识字符串
-   */
   private generateRequestKey(config: CustomInternalAxiosRequestConfig): string {
     const { method, url, params, data } = config;
-    return [method, url, JSON.stringify(params), JSON.stringify(data)].join('&');
+    let dataKey = '';
+
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      // 二进制体无法稳定序列化，不参与重复判定，避免上传互相取消
+      dataKey = `[FormData]:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    } else if (data !== undefined) {
+      try {
+        dataKey = JSON.stringify(data);
+      } catch {
+        dataKey = String(data);
+      }
+    }
+
+    let paramsKey: string;
+    try {
+      paramsKey = JSON.stringify(params ?? null);
+    } catch {
+      paramsKey = String(params);
+    }
+
+    return [method, url, paramsKey, dataKey].join('&');
   }
 
-  /**
-   * 添加请求到pendingMap
-   * @param config 请求配置
-   */
+  /** 注册请求，并取消同 key 的旧请求 */
   public addPending(config: CustomInternalAxiosRequestConfig): void {
-    // 先尝试移除同样的请求
-    this.removePending(config);
     const requestKey = this.generateRequestKey(config);
+    const previous = this.pendingMap.get(requestKey);
+    if (previous) {
+      previous.abort('Request canceled due to duplicate request');
+      this.pendingMap.delete(requestKey);
+    }
+
     const controller = new AbortController();
-    
     config.signal = controller.signal;
     config.requestId = requestKey;
-    
-    if (!this.pendingMap.has(requestKey)) {
-      this.pendingMap.set(requestKey, controller);
-    }
+    this.pendingMap.set(requestKey, controller);
   }
 
-  /**
-   * 移除请求从pendingMap
-   * @param config 请求配置 
-   */
+  /** 请求结束时移除登记，不触发 abort */
   public removePending(config: CustomInternalAxiosRequestConfig): void {
-    const requestKey = this.generateRequestKey(config);
-    if (this.pendingMap.has(requestKey)) {
-      const controller = this.pendingMap.get(requestKey);
-      controller?.abort('Request canceled due to duplicate request');
+    const requestKey = config.requestId || this.generateRequestKey(config);
+    const controller = this.pendingMap.get(requestKey);
+    if (controller && controller.signal === config.signal) {
       this.pendingMap.delete(requestKey);
     }
   }
 
-  /**
-   * 清除所有pending请求
-   */
-  public clearPending(): void {
-    this.pendingMap.forEach((controller) => {
-      controller.abort('Request canceled due to application state change');
-    });
+  /** 主动取消全部进行中的请求 */
+  public clearPending(message = 'Request canceled'): void {
+    this.pendingMap.forEach(controller => controller.abort(message));
     this.pendingMap.clear();
   }
-  
-  /**
-   * 获取当前pending请求数量
-   */
+
   public getPendingCount(): number {
     return this.pendingMap.size;
   }

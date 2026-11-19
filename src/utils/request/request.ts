@@ -1,11 +1,13 @@
-// 核心请求类
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
-import { 
-  CustomAxiosRequestConfig, 
-  CustomInternalAxiosRequestConfig, 
-  BaseResponse, 
-  PendingRequest 
+// 核心请求类：拦截器、loading、取消、错误、离线队列与 token 刷新
+import axios from 'axios';
+import type { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import type {
+  CustomAxiosRequestConfig,
+  CustomInternalAxiosRequestConfig,
+  BaseResponse,
+  RequestOptions,
 } from './types';
+import type { TokenInfo } from './token-manager';
 import axiosCanceler from './cancel';
 import loadingManager from './loading';
 import errorHandler from './error-handler';
@@ -13,131 +15,76 @@ import tokenManager from './token-manager';
 import toastManager from './toast';
 import networkManager from './network';
 
-/**
- * HTTP请求类
- * 企业级axios二次封装
- */
+const DEFAULT_REQUEST_OPTIONS: RequestOptions = {
+  showLoading: true,
+  loadingText: '加载中...',
+  cancelRepeatRequest: true,
+  autoRefreshToken: true,
+  handleErrorStatus: true,
+  showErrorMessage: true,
+  queueWhenOffline: true,
+  retryCount: 0,
+  retryDelay: 1000,
+  cacheBust: false,
+  skipBusinessCheck: false,
+};
+
 class Request {
   private axiosInstance: AxiosInstance;
-  
-  // 默认配置
-  private defaultConfig: CustomAxiosRequestConfig = {
-    // 基础URL，优先使用环境变量
-    baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-    // 超时时间
-    timeout: 15000,
-    // 默认头信息
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-    },
-    // 自定义请求选项
-    requestOptions: {
-      showLoading: true,
-      loadingText: '加载中...',
-      cancelRepeatRequest: true,
-      autoRefreshToken: true,
-      handleErrorStatus: true,
-      showErrorMessage: true,
-      queueWhenOffline: true,
-      retryWhenOnline: true,
-      retryCount: 0,
-      retryDelay: 1000,
-    },
-  };
+  private defaultConfig: Omit<CustomAxiosRequestConfig, 'requestOptions'>;
+  private defaultRequestOptions: RequestOptions;
 
-  /**
-   * 创建HTTP请求实例 
-   * @param config 自定义配置，会与默认配置合并
-   */
   constructor(config: CustomAxiosRequestConfig = {}) {
-    // 创建axios实例并合并配置
-    this.axiosInstance = axios.create({
-      ...this.defaultConfig,
-      ...config,
-      // 合并requestOptions
-      requestOptions: {
-        ...this.defaultConfig.requestOptions,
-        ...config.requestOptions,
-      }
-    });
-    
-    // 初始化拦截器
+    this.defaultConfig = {
+      // 与 .env 中的 VITE_API_BASE_URL 保持一致；url 不要再带 /api 前缀
+      baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+      timeout: 15000,
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    };
+
+    // 自定义选项单独管理，不塞进 axios.create（axios 不认识该字段）
+    this.defaultRequestOptions = { ...DEFAULT_REQUEST_OPTIONS, ...config.requestOptions };
+    const { requestOptions: _instanceOptions, ...axiosConfig } = config;
+    this.axiosInstance = axios.create({ ...this.defaultConfig, ...axiosConfig });
+
     this.setupInterceptors();
-    
-    // 监听网络状态变化
     this.setupNetworkListener();
   }
 
-  /**
-   * 设置网络状态监听
-   */
   private setupNetworkListener(): void {
-    networkManager.addStatusChangeListener((status) => {
-      if (status === 'online') {
-        // 网络恢复时可以执行一些操作，比如重试失败的请求
-        console.log('Network is back online');
-      } else if (status === 'offline') {
-        // 网络断开时可以执行一些操作
-        console.log('Network is offline');
-        // 可以选择是否关闭所有loading
-        loadingManager.forceHide();
-      }
+    networkManager.addStatusChangeListener(status => {
+      if (status === 'offline') loadingManager.forceHide();
     });
   }
 
-  /**
-   * 设置请求和响应拦截器
-   */
+  /** 把实例默认值与单次请求值合并，保证每个请求拿到完整选项 */
+  private resolveOptions(config?: { requestOptions?: RequestOptions }): RequestOptions {
+    return { ...this.defaultRequestOptions, ...config?.requestOptions };
+  }
+
   private setupInterceptors(): void {
-    // 请求拦截器
     this.axiosInstance.interceptors.request.use(
-      (config: CustomInternalAxiosRequestConfig) => {
-        const requestOptions = config.requestOptions || this.defaultConfig.requestOptions;
-        
-        // 检查网络状态，如果离线且配置了离线队列，则加入队列
-        if (networkManager.getStatus() === 'offline' && requestOptions?.queueWhenOffline) {
-          // 返回一个新的Promise，将请求放入离线队列
-          return new Promise((resolve, reject) => {
-            const pendingRequest: PendingRequest = {
-              config,
-              resolve,
-              reject
-            };
-            networkManager.addToOfflineQueue(pendingRequest);
-          }) as any;
-        }
-        
-        // 显示loading
-        if (requestOptions?.showLoading) {
-          loadingManager.show(requestOptions);
-        }
-        
-        // 取消重复请求
-        if (requestOptions?.cancelRepeatRequest) {
-          axiosCanceler.addPending(config);
-        }
-        
-        // 添加token到请求头
+      rawConfig => {
+        const config = rawConfig as CustomInternalAxiosRequestConfig;
+        config.requestOptions = this.resolveOptions(config);
+        const opt = config.requestOptions;
+
+        if (opt.showLoading) loadingManager.show(opt);
+        if (opt.cancelRepeatRequest) axiosCanceler.addPending(config);
+        if (opt.timeout) config.timeout = opt.timeout;
+
         const token = tokenManager.getAccessToken();
-        if (token) {
-          config.headers = config.headers || {};
-          config.headers['Authorization'] = `Bearer ${token}`;
+        if (token) config.headers.set('Authorization', `Bearer ${token}`);
+
+        if (config.method?.toUpperCase() === 'GET' && opt.cacheBust) {
+          config.params = { ...config.params, _t: Date.now() };
         }
 
-        // 禁用浏览器缓存
-        if (config.method?.toUpperCase() === 'GET') {
-          config.params = { 
-            ...config.params, 
-            _t: new Date().getTime() 
-          };
+        // 仅当已有 token、且不是刷新后的重放请求时后台续期
+        if (token && opt.autoRefreshToken && !config.retryAfterRefresh && tokenManager.isTokenExpiringSoon()) {
+          void this.refreshTokenInBackground();
         }
-        
-        // 如果token即将过期，尝试刷新
-        if (tokenManager.isTokenExpiringSoon() && requestOptions?.autoRefreshToken) {
-          // 这里不等待，让刷新token在后台进行
-          this.refreshTokenInBackground();
-        }
-        
+
         return config;
       },
       (error: AxiosError) => {
@@ -146,394 +93,263 @@ class Request {
       }
     );
 
-    // 响应拦截器
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
         const config = response.config as CustomInternalAxiosRequestConfig;
-        const requestOptions = config.requestOptions || this.defaultConfig.requestOptions;
-        
-        // 在响应处理完成后，移除pending中的请求
-        if (requestOptions?.cancelRepeatRequest) {
-          axiosCanceler.removePending(config);
-        }
-        
-        // 请求完成，隐藏loading
-        if (requestOptions?.showLoading) {
-          loadingManager.hide();
-        }
-        
-        // 处理文件下载
-        const contentType = response.headers['content-type'];
-        if (
-          contentType?.includes('application/octet-stream') || 
-          contentType?.includes('application/vnd.ms-excel') ||
-          contentType?.includes('application/vnd.openxmlformats-officedocument') ||
-          contentType?.includes('application/pdf')
-        ) {
+        const opt = this.resolveOptions(config);
+
+        if (opt.cancelRepeatRequest) axiosCanceler.removePending(config);
+        if (opt.showLoading) loadingManager.hide();
+
+        // 二进制响应返回完整 AxiosResponse，供 download() 读取 headers；
+        // 不再依赖 content-type 白名单判断，zip/csv/自定义类型同样可用。
+        if (config.responseType === 'blob' || config.responseType === 'arraybuffer') {
           return response;
         }
-        
-        // 业务状态码处理
-        if (response.data && requestOptions?.handleErrorStatus) {
-          const { code, message } = response.data as BaseResponse;
-          // 假设业务状态码200代表成功
-          if (code !== 200 && code !== 0) {
-            errorHandler.handleBusinessError(
-              code, 
-              message, 
-              requestOptions.showErrorMessage
-            );
-            return Promise.reject(new Error(message));
+
+        const data = response.data;
+        const hasBusinessCode =
+          data !== null &&
+          typeof data === 'object' &&
+          !Array.isArray(data) &&
+          'code' in data;
+
+        if (opt.handleErrorStatus && !opt.skipBusinessCheck && hasBusinessCode) {
+          const { code, message } = data as BaseResponse;
+          if (Number(code) !== 200 && Number(code) !== 0) {
+            errorHandler.handleBusinessError(Number(code), message, opt.showErrorMessage);
+            const err = new Error(message || '业务请求失败') as Error & {
+              code?: number;
+              data?: unknown;
+            };
+            err.code = Number(code);
+            err.data = (data as BaseResponse).data;
+            return Promise.reject(err);
           }
         }
 
-        return response.data;
+        return data;
       },
       async (error: AxiosError) => {
-        const config = error.config as CustomInternalAxiosRequestConfig;
-        
-        // 如果没有config，说明请求没有发出去
+        const config = error.config as CustomInternalAxiosRequestConfig | undefined;
         if (!config) {
           loadingManager.forceHide();
           return Promise.reject(error);
         }
-        
-        const requestOptions = config.requestOptions || this.defaultConfig.requestOptions;
-        
-        // 移除pending中的请求
-        if (config && requestOptions?.cancelRepeatRequest) {
-          axiosCanceler.removePending(config);
-        }
-        
-        // 隐藏loading
-        if (requestOptions?.showLoading) {
-          loadingManager.hide();
-        }
-        
-        // 处理请求重试逻辑
-        const retryCount = config.retryCount || 0;
-        const maxRetries = requestOptions?.retryCount || 0;
-        
-        // 如果配置了重试且未达到最大重试次数
-        if (maxRetries > 0 && retryCount < maxRetries) {
-          // 增加重试计数
-          const newConfig = {
-            ...config,
-            retryCount: retryCount + 1,
-          };
-          
-          // 延迟指定时间后重试
-          const delay = requestOptions?.retryDelay || 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          
-          console.log(`Retrying request (${retryCount + 1}/${maxRetries}): ${config.url}`);
-          return this.axiosInstance(newConfig);
-        }
-        
-        // 处理401错误，尝试刷新Token
-        if (
-          error.response?.status === 401 &&
-          requestOptions?.autoRefreshToken &&
-          tokenManager.getRefreshToken()
-        ) {
-          // 尝试刷新token并重试请求
-          try {
-            const newToken = await this.refreshToken();
-            if (newToken && config) {
-              config.headers = config.headers || {};
-              config.headers['Authorization'] = `Bearer ${newToken}`;
-              // 重新发送请求
-              return this.axiosInstance(config);
-            }
-          } catch (refreshError) {
-            return Promise.reject(refreshError);
-          }
+
+        const opt = this.resolveOptions(config);
+        if (opt.cancelRepeatRequest) axiosCanceler.removePending(config);
+        if (opt.showLoading) loadingManager.hide();
+
+        if (opt.errorHandler) {
+          opt.errorHandler(error);
+          return Promise.reject(error);
         }
 
-        if (error.response && requestOptions?.handleErrorStatus) {
-          // HTTP状态码错误处理
+        // 自动重试：仅网络错误或 5xx，401 交给刷新流程
+        const retryCount = config.retryCount || 0;
+        const maxRetries = opt.retryCount || 0;
+        const canRetry = !error.response || error.response.status >= 500;
+        if (maxRetries > 0 && retryCount < maxRetries && canRetry) {
+          const retryConfig = {
+            ...config,
+            retryCount: retryCount + 1,
+          } as CustomInternalAxiosRequestConfig;
+          if (opt.retryDelay) await new Promise(resolve => setTimeout(resolve, opt.retryDelay));
+          return this.axiosInstance.request(retryConfig);
+        }
+
+        if (error.response?.status === 401) {
+          const canRefresh =
+            opt.autoRefreshToken && !config.retryAfterRefresh && tokenManager.getRefreshToken();
+          if (canRefresh) {
+            try {
+              const newToken = await this.refreshToken();
+              if (newToken) {
+                config.retryAfterRefresh = true;
+                config.headers.set('Authorization', `Bearer ${newToken}`);
+                return this.axiosInstance.request(config);
+              }
+            } catch (refreshError) {
+              return Promise.reject(refreshError);
+            }
+          }
+          tokenManager.clearToken();
+          this.redirectToLogin();
+        }
+
+        if (error.response && opt.handleErrorStatus) {
           errorHandler.handleStatusError(
             error.response.status,
             (error.response.data as any)?.message || error.message,
-            requestOptions.showErrorMessage
+            opt.showErrorMessage
           );
         } else if (error.request) {
-          // 请求已发送但没有收到响应
-          errorHandler.handleNetworkError(error, requestOptions?.showErrorMessage);
-        } else {
-          // 其他错误
-          if (requestOptions?.showErrorMessage) {
-            toastManager.error(error.message || '发生未知错误');
-          }
-          console.error('[Request Error]:', error);
+          errorHandler.handleNetworkError(error, opt.showErrorMessage);
+        } else if (opt.showErrorMessage) {
+          toastManager.error(error.message || '发生未知错误');
         }
-        
+
         return Promise.reject(error);
       }
     );
   }
-  
-  /**
-   * 在后台刷新token，不影响当前请求
-   */
+
+  private redirectToLogin(): void {
+    if (typeof window === 'undefined' || window.location.hash.startsWith('#/login')) return;
+    window.location.replace(`${window.location.pathname}${window.location.search}#/login`);
+  }
+
   private async refreshTokenInBackground(): Promise<void> {
     try {
       await this.refreshToken();
-    } catch (error) {
-      console.error('Background token refresh failed:', error);
+    } catch {
+      // 后台续期失败不打断当前请求，真正失效时由 401 流程统一处理
     }
   }
-  
-  /**
-   * 刷新token的实现
-   */
+
   private async refreshToken(): Promise<string> {
-    return tokenManager.refreshToken(async (refreshToken) => {
-      // 使用axios直接发送请求，而不是通过this.axiosInstance
-      // 避免触发拦截器导致的死循环
-      const response = await axios.post<BaseResponse<any>>(
-        '/api/auth/refresh-token',
+    return tokenManager.refreshToken(async refreshToken => {
+      // 用原生 axios 避免再次进入实例拦截器造成循环；url 相对 baseURL，不带 /api 前缀
+      const response = await axios.post<BaseResponse<TokenInfo>>(
+        '/auth/refresh-token',
         { refreshToken },
         {
           baseURL: this.defaultConfig.baseURL,
-          headers: {
-            'Content-Type': 'application/json',
-          }
+          headers: { 'Content-Type': 'application/json' },
         }
       );
       return response.data;
     });
   }
-  
-  /**
-   * 发送请求的通用方法
-   * @param config 请求配置
-   */
-  public async request<T = any>(config: CustomAxiosRequestConfig): Promise<T> {
+
+  /** 统一请求入口：在这里处理离线队列，拦截器不再返回伪造的 config */
+  public request<T = any>(config: CustomAxiosRequestConfig): Promise<T> {
+    const opt = this.resolveOptions(config);
+    if (networkManager.getStatus() === 'offline' && opt.queueWhenOffline) {
+      return new Promise<T>((resolve, reject) => {
+        networkManager.addToOfflineQueue({
+          config,
+          resolve,
+          reject,
+          replay: c => this.axiosInstance.request(c),
+        });
+      });
+    }
     return this.axiosInstance.request<any, T>(config);
   }
 
-  /**
-   * GET请求
-   * @param url 请求地址
-   * @param params 请求参数
-   * @param config 其他配置
-   */
-  public async get<T = any>(
-    url: string,
-    params?: any,
-    config?: CustomAxiosRequestConfig
-  ): Promise<T> {
-    return this.request<T>({
-      method: 'GET',
-      url,
-      params,
-      ...config,
-    });
+  public get<T = any>(url: string, params?: any, config?: CustomAxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'GET', url, params: params ?? config?.params });
   }
 
-  /**
-   * POST请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 其他配置
-   */
-  public async post<T = any>(
-    url: string,
-    data?: any,
-    config?: CustomAxiosRequestConfig
-  ): Promise<T> {
-    return this.request<T>({
-      method: 'POST',
-      url,
-      data,
-      ...config,
-    });
+  public post<T = any>(url: string, data?: any, config?: CustomAxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
-  /**
-   * PUT请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 其他配置
-   */
-  public async put<T = any>(
-    url: string,
-    data?: any,
-    config?: CustomAxiosRequestConfig
-  ): Promise<T> {
-    return this.request<T>({
-      method: 'PUT',
-      url,
-      data,
-      ...config,
-    });
+  public put<T = any>(url: string, data?: any, config?: CustomAxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
-  /**
-   * DELETE请求
-   * @param url 请求地址
-   * @param data 请求数据
-   * @param config 其他配置
-   */
-  public async delete<T = any>(
-    url: string,
-    data?: any,
-    config?: CustomAxiosRequestConfig
-  ): Promise<T> {
-    return this.request<T>({
-      method: 'DELETE',
-      url,
-      data,
-      params: config?.params,
-      ...config,
-    });
+  public delete<T = any>(url: string, data?: any, config?: CustomAxiosRequestConfig): Promise<T> {
+    return this.request<T>({ ...config, method: 'DELETE', url, data });
   }
 
-  /**
-   * 上传文件
-   * @param url 上传地址
-   * @param file 文件对象或FormData
-   * @param config 其他配置
-   */
-  public async upload<T = any>(
+  public upload<T = any>(
     url: string,
     file: File | FormData,
     config?: CustomAxiosRequestConfig
   ): Promise<T> {
     let formData: FormData;
-    
     if (file instanceof FormData) {
       formData = file;
     } else {
       formData = new FormData();
       formData.append('file', file);
     }
-
-    return this.request<T>({
-      method: 'POST',
-      url,
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      ...config,
-    });
+    // 不显式设置 Content-Type：由浏览器自动生成带 boundary 的 multipart 头
+    return this.request<T>({ ...config, method: 'POST', url, data: formData });
   }
 
-  /**
-   * 批量上传文件
-   * @param url 上传地址
-   * @param files 文件数组
-   * @param fileField 文件字段名
-   * @param config 其他配置
-   */
-  public async uploadMultiple<T = any>(
+  public uploadMultiple<T = any>(
     url: string,
     files: File[],
-    fileField: string = 'files',
+    fileField = 'files',
     config?: CustomAxiosRequestConfig
   ): Promise<T> {
     const formData = new FormData();
-    
-    files.forEach((file, index) => {
-      formData.append(`${fileField}[${index}]`, file);
-    });
-
+    files.forEach((file, index) => formData.append(`${fileField}[${index}]`, file));
     return this.upload<T>(url, formData, config);
   }
 
-  /**
-   * 下载文件
-   * @param url 下载地址
-   * @param params 请求参数
-   * @param config 其他配置
-   */
   public async download(
     url: string,
     params?: any,
     config?: CustomAxiosRequestConfig
   ): Promise<Blob> {
-    const fileName = config?.requestOptions?.fileName;
-    
-    const response = await this.axiosInstance.request({
+    const response = await this.request<AxiosResponse<Blob>>({
+      ...config,
       method: 'GET',
       url,
       params,
       responseType: 'blob',
-      ...config,
     });
 
-    const blob = new Blob([response.data]);
-    
-    // 获取文件名
-    let downloadFileName = fileName;
-    if (!downloadFileName) {
-      const contentDisposition = response.headers['content-disposition'];
-      if (contentDisposition) {
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-        const matches = filenameRegex.exec(contentDisposition);
-        if (matches != null && matches[1]) {
-          downloadFileName = matches[1].replace(/['"]/g, '');
-          // 解码文件名
-          try {
-            downloadFileName = decodeURIComponent(downloadFileName);
-          } catch (e) {
-            // 解码失败时使用原始文件名
-          }
-        }
-      }
-      downloadFileName = downloadFileName || 'download';
-    }
+    // 直接使用服务端返回的 Blob，保留原始 MIME 类型
+    const raw = response.data;
+    const blob = raw instanceof Blob ? raw : new Blob([raw]);
+    const fileName =
+      config?.requestOptions?.fileName || this.parseFileName(response.headers) || 'download';
 
-    // 创建下载链接
-    const downloadUrl = window.URL.createObjectURL(blob);
+    const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = downloadFileName;
+    link.href = objectUrl;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
-    
-    // 释放URL对象
-    setTimeout(() => {
-      window.URL.revokeObjectURL(downloadUrl);
-    }, 100);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
 
     return blob;
   }
-  
-  /**
-   * 直接导出Excel文件
-   * @param url 导出地址
-   * @param params 请求参数
-   * @param fileName 文件名
-   */
-  public async exportExcel(
-    url: string,
-    params?: any,
-    fileName: string = 'export.xlsx'
-  ): Promise<Blob> {
+
+  private parseFileName(headers: AxiosResponse['headers']): string {
+    const disposition = headers?.['content-disposition'] as string | undefined;
+    if (!disposition) return '';
+
+    // RFC 5987: filename*=UTF-8''%E6%8A%A5%E8%A1%A8.xlsx
+    const utf8Match = /filename\*\s*=\s*UTF-8''([^;]+)/i.exec(disposition);
+    if (utf8Match?.[1]) {
+      try {
+        return decodeURIComponent(utf8Match[1].replace(/['"]/g, '').trim());
+      } catch {
+        // 解码失败时回退到普通 filename
+      }
+    }
+
+    const plainMatch = /filename[^;=\n]*=\s*(?:(['"])(.*?)\1|([^;\n]*))/i.exec(disposition);
+    const value = (plainMatch?.[2] ?? plainMatch?.[3] ?? '').trim();
+    try {
+      return decodeURIComponent(value.replace(/['"]/g, ''));
+    } catch {
+      return value.replace(/['"]/g, '');
+    }
+  }
+
+  public exportExcel(url: string, params?: any, fileName = 'export.xlsx'): Promise<Blob> {
     return this.download(url, params, {
       requestOptions: {
-        fileName: fileName,
+        fileName,
         showLoading: true,
-        loadingText: '正在导出数据，请稍候...'
-      }
+        loadingText: '正在导出数据，请稍候...',
+      },
     });
   }
-  
-  /**
-   * 取消所有请求
-   * @param message 取消原因
-   */
-  public cancelAllRequests(message: string = 'Request canceled'): void {
-    axiosCanceler.clearPending();
+
+  public cancelAllRequests(message = 'Request canceled'): void {
+    axiosCanceler.clearPending(message);
   }
-  
-  /**
-   * 清空离线请求队列
-   */
+
   public clearOfflineQueue(): void {
     networkManager.clearOfflineQueue();
   }

@@ -7,7 +7,7 @@ import type { Dayjs } from 'dayjs';
 import type { Plugin, ResolvedConfig } from 'vite';
 dayjs.extend(duration);
 
-const tost = `🤩你好！如果您感觉内容还不错，在右边链接给个star哦😘！https://gitee.com`;
+const tost = `🤩你好！如果您感觉内容还不错，在右边链接给个star哦😘！https://gitee.com/web_akai/bird-admin`;
 
 function getdirsize(dir: string, callback: (fileNumber: number, size: number) => void) {
   let size = 0;

@@ -2,6 +2,7 @@ import type { App } from "vue";
 
 import { setupI18n } from "@/locales";
 import { setupElementPlusIcons } from "./elementPlusIcons";
+import { setupPermissionDirective } from "@/directive";
 
 
 export default {
@@ -10,5 +11,7 @@ export default {
     setupI18n(app);
     // Element-plus图标
     setupElementPlusIcons(app);
+    // 按钮级权限指令 v-permission
+    setupPermissionDirective(app);
   }
 }

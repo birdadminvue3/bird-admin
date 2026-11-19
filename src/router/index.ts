@@ -1,164 +1,90 @@
-
-import staticRoutes from './modules/staticRoutes'
+import staticRoutes from "./modules/staticRoutes";
 import NProgress from "../utils/progress/index";
-import {
-  type Router,
-  createRouter,
-  createWebHashHistory,
-  type RouteRecordRaw,
-  type RouteComponent
-} from "vue-router";
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from "vue-router";
+import tokenManager from "@/utils/request/token-manager";
+import { getUserInfoApi } from "@/api/rbac/auth";
+import { useUserStoreHook } from "@/store/modules/user";
+import { usePermissionStoreHook } from "@/store/modules/permission";
 
-// import { usePermissionStoreHook } from "@/stores/modules/permission";
-/** 自动导入全部静态路由，无需再手动引入！匹配 src/router/modules 目录（任何嵌套级别）中具有 .ts 扩展名的所有文件，除了 remaining.ts 文件
- * 如何匹配所有文件请看：https://github.com/mrmlnc/fast-glob#basic-syntax
- * 如何排除文件请看：https://cn.vitejs.dev/guide/features.html#negative-patterns
- */
+/** 自动收集 src/router/modules 下的路由模块（排除 staticRoutes.ts） */
 const modules: Record<string, any> = import.meta.glob(
   ["./modules/**/*.ts", "!./modules/**/staticRoutes.ts"],
-  {
-    eager: true
-  }
+  { eager: true }
 );
 
-/** 原始静态路由（未做任何处理） */
-const routes = [];
-
-Object.keys(modules).forEach(key => {
-  routes.push(modules[key].default);
+const routes: RouteRecordRaw[] = [];
+Object.values(modules).forEach(mod => {
+  if (mod?.default) routes.push(mod.default);
 });
 
-/** 导出处理后的静态路由（三级及以上的路由全部拍成二级） */
-// export const constantRoutes: Array<RouteRecordRaw> = formatTwoStageRoutes(
-//   formatFlatteningRoutes(buildHierarchyTree(ascending(routes.flat(Infinity))))
-// );
-export const constantRoutes: Array<RouteRecordRaw> = routes;
+export const constantRoutes: RouteRecordRaw[] = routes;
+export const staticPaths = (staticRoutes as Array<{ path: string }>).map(route => route.path);
 
-/** 用于渲染菜单，保持原始层级 */
-// export const constantMenus: Array<RouteComponent> = ascending(
-//   routes.flat(Infinity)
-// ).concat(...staticRoutes);
-
-/** 不参与菜单的路由 */
-export const staticPaths = Object.keys(staticRoutes).map(v => {
-  return staticRoutes[v].path;
-});
-
-// 创建路由实例
 export const router = createRouter({
   history: createWebHashHistory(),
-  routes: constantRoutes.concat(...(staticRoutes as any)), // 静态路由
+  routes: constantRoutes.concat(...(staticRoutes as any), [
+    // 未匹配的路径统一回到首页；动态路由的 score 更高，不会被它抢先匹配
+    { path: "/:pathMatch(.*)*", redirect: "/dashboard" },
+  ]),
   strict: true,
-  scrollBehavior: () => ({ left: 0, top: 0 }) // 滚动行为
-})
-
-/** 路由白名单 */
-const whiteList = ["/login"];
-const { VITE_HIDE_HOME } = import.meta.env;
-
-router.beforeEach((to: ToRouteType, _from, next) => {
-  // // 判断是否缓存
-  // if (to.meta?.keepAlive) {
-  //   handleAliveRoute(to, "add");
-  //   // 页面整体刷新和点击标签页刷新
-  //   if (_from.name === undefined || _from.name === "Redirect") {
-  //     handleAliveRoute(to);
-  //   }
-  // }
-  // // 获取到用户信息
-  // const userInfo = storageLocal().getItem<DataInfo<number>>(userKey);
-  // NProgress.start();
-
-  // const externalLink = isUrl(to?.name as string);
-  // if (!externalLink) {
-  //   // to.matched.some(item => {
-  //   //   if (!item.meta.title) return "";
-  //   //   const Title = getConfig().systemInfo.name;
-  //   //   if (Title)
-  //   //     document.title = `${$t(item.meta.title)} | ${Title}`;
-  //   //   else document.title = $t(item.meta.title);
-  //   // });
-  // }
-
-  // /** 如果已经登录并存在登录信息后不能跳转到路由白名单，而是继续保持在当前页面 */
-  // function toCorrectRoute() {
-  //   whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
-  // }
-  // if (Cookies.get(multipleTabsKey) && userInfo) {
-  //   // 无权限跳转403页面
-  //   if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
-  //     next({ path: "/error/403" });
-  //   }
-
-  //   // 开启隐藏首页后在浏览器地址栏手动输入首页welcome路由则跳转到404页面
-  //   if (VITE_HIDE_HOME === "true" && to.fullPath === "/welcome") {
-  //     next({ path: "/error/404" });
-  //   }
-  //   if (_from?.name) {
-  //     // name为超链接
-  //     if (externalLink) {
-  //       openLink(to?.name as string);
-  //       NProgress.done();
-  //     } else {
-  //       toCorrectRoute();
-  //     }
-  //   } else {
-  //     // 刷新
-  //     // if (
-  //     //   usePermissionStoreHook().wholeMenus.length === 0 &&
-  //     //   to.path !== "/login"
-  //     // ) {
-  //       // initRouter().then((router: Router) => {
-  //       //   if (!useMultiTagsStoreHook().getMultiTagsCache) {
-  //       //     const { path } = to;
-  //       //     const route = findRouteByPath(
-  //       //       path,
-  //       //       router.options.routes[0].children
-  //       //     );
-  //       //     getTopMenu(true);
-  //       //     // query、params模式路由传参数的标签页不在此处处理
-  //       //     if (route && route.meta?.title) {
-  //       //       if (isAllEmpty(route.parentId) && route.meta?.backstage) {
-  //       //         // 此处为动态顶级路由（目录）
-  //       //         const { path, name, meta } = route.children[0];
-  //       //         useMultiTagsStoreHook().handleTags("push", {
-  //       //           path,
-  //       //           name,
-  //       //           meta
-  //       //         });
-  //       //       } else {
-  //       //         const { path, name, meta } = route;
-  //       //         useMultiTagsStoreHook().handleTags("push", {
-  //       //           path,
-  //       //           name,
-  //       //           meta
-  //       //         });
-  //       //       }
-  //       //     }
-  //       //   }
-  //         // 确保动态路由完全加入路由列表并且不影响静态路由（注意：动态路由刷新时router.beforeEach可能会触发两次，第一次触发动态路由还未完全添加，第二次动态路由才完全添加到路由列表，如果需要在router.beforeEach做一些判断可以在to.name存在的条件下去判断，这样就只会触发一次）
-  //         if (isAllEmpty(to.name)) router.push(to.fullPath);
-  //       // });
-  //     // }
-  //     toCorrectRoute();
-  //   }
-  // } else {
-  //   if (to.path !== "/login") {
-  //     if (whiteList.indexOf(to.path) !== -1) {
-  //       next();
-  //     } else {
-  //       // removeToken();
-  //       next({ path: "/login" });
-  //     }
-  //   } else {
-  //     next();
-  //   }
-  // }
-  next();
-})
-
-router.afterEach(() => {
-  NProgress.done();
+  scrollBehavior: () => ({ left: 0, top: 0 }),
 });
 
-export default router
+/** 无需登录即可访问的路径 */
+const whiteList = ["/login"];
+
+router.beforeEach(async (to, _from, next) => {
+  NProgress.start();
+
+  const hasToken = Boolean(tokenManager.getAccessToken());
+  if (!hasToken) {
+    const permissionStore = usePermissionStoreHook();
+    if (permissionStore.loaded) permissionStore.resetRoutes();
+    if (whiteList.includes(to.path)) {
+      next();
+    } else {
+      next({
+        path: "/login",
+        query: to.fullPath !== "/" && to.fullPath !== "/login" ? { redirect: to.fullPath } : undefined,
+      });
+    }
+    return;
+  }
+
+  // 已登录时不再停留在登录页
+  if (to.path === "/login") {
+    next({ path: "/" });
+    return;
+  }
+
+  try {
+    const permissionStore = usePermissionStoreHook();
+    if (!permissionStore.loaded) {
+      // 刷新页面后 Pinia 状态丢失，先恢复用户资料再按权限生成路由
+      const userStore = useUserStoreHook();
+      if (!userStore.userInfo) {
+        const res = await getUserInfoApi();
+        userStore.setProfile(res.data);
+      }
+      const dynamicRoutes = await permissionStore.generateRoutes();
+      dynamicRoutes.forEach(route => router.addRoute(route));
+      // 重新进入一次，确保 addRoute 后能匹配到目标
+      next({ ...to, replace: true });
+      return;
+    }
+    next();
+  } catch {
+    // 拉取用户信息/路由失败按登录失效处理
+    useUserStoreHook().logout();
+    usePermissionStoreHook().resetRoutes();
+    next({
+      path: "/login",
+      query: to.fullPath !== "/" ? { redirect: to.fullPath } : undefined,
+    });
+  }
+});
+
+router.afterEach(() => NProgress.done());
+router.onError(() => NProgress.done());
+
+export default router;

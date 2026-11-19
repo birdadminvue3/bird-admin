@@ -81,7 +81,7 @@ class ToastManager {
         ...options
       });
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

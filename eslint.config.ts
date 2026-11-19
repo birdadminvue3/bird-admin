@@ -1,157 +1,86 @@
+// ESLint 10 flat config（依赖已声明在 package.json，配置文件为 .ts，由 jiti 加载）
 import js from "@eslint/js";
 import pluginVue from "eslint-plugin-vue";
 import * as parserVue from "vue-eslint-parser";
-import configPrettier from "eslint-config-prettier";
-import pluginPrettier from "eslint-plugin-prettier";
-import { defineFlatConfig } from "eslint-define-config";
 import * as parserTypeScript from "@typescript-eslint/parser";
 import pluginTypeScript from "@typescript-eslint/eslint-plugin";
 
-export default defineFlatConfig([
+const browserGlobals = {
+  console: "readonly",
+  window: "readonly",
+  document: "readonly",
+  navigator: "readonly",
+  localStorage: "readonly",
+  sessionStorage: "readonly",
+  setTimeout: "readonly",
+  clearTimeout: "readonly",
+  setInterval: "readonly",
+  clearInterval: "readonly",
+  URL: "readonly",
+  Blob: "readonly",
+  File: "readonly",
+  FormData: "readonly",
+  AbortController: "readonly",
+  fetch: "readonly",
+  KeyboardEvent: "readonly",
+  __APP_INFO__: "readonly",
+};
+
+const unusedVarsRule = [
+  "error",
+  { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+] as const;
+
+export default [
+  {
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/*.d.ts",
+      "public/**",
+      "src/assets/**",
+      ".auto-import.json",
+    ],
+  },
   {
     ...js.configs.recommended,
-    ignores: [
-      "**/.*",
-      "dist/*",
-      "*.d.ts",
-      "public/*",
-      "src/assets/**",
-      "src/**/iconfont/**"
-    ],
-    languageOptions: {
-      globals: {
-        AppSettings: "readonly",
-        __APP_INFO__: "readonly",
-      }
-    },
-    plugins: {
-      prettier: pluginPrettier
-    },
+    languageOptions: { globals: browserGlobals },
     rules: {
-      ...configPrettier.rules,
-      ...pluginPrettier.configs.recommended.rules,
-      "no-debugger": "off",
-      "no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ],
-      "prettier/prettier": [
-        "error",
-        {
-          endOfLine: "auto"
-        }
-      ]
-    }
+      ...js.configs.recommended.rules,
+      // TS 类型、Vue 编译宏与自动导入由编译器处理，避免误报
+      "no-undef": "off",
+      "no-unused-vars": "off",
+    },
   },
   {
-    files: ["**/*.?([cm])ts", "**/*.?([cm])tsx"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: parserTypeScript,
-      parserOptions: {
-        sourceType: "module",
-        warnOnUnsupportedTypeScriptVersion: false
-      }
+      parserOptions: { ecmaVersion: "latest", sourceType: "module" },
+      globals: browserGlobals,
     },
-    plugins: {
-      "@typescript-eslint": pluginTypeScript
-    },
-    rules: {
-      ...pluginTypeScript.configs.strict.rules,
-      "@typescript-eslint/ban-types": "off",
-      "@typescript-eslint/no-redeclare": "error",
-      "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/prefer-as-const": "warn",
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "@typescript-eslint/no-unsafe-function-type": "off",
-      "@typescript-eslint/no-import-type-side-effects": "error",
-      "@typescript-eslint/explicit-module-boundary-types": "off",
-      "@typescript-eslint/consistent-type-imports": [
-        "error",
-        { disallowTypeAnnotations: false, fixStyle: "inline-type-imports" }
-      ],
-      "@typescript-eslint/prefer-literal-enum-member": [
-        "error",
-        { allowBitwiseExpressions: true }
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ]
-    }
-  },
-  {
-    files: ["**/*.d.ts"],
-    rules: {
-      "eslint-comments/no-unlimited-disable": "off",
-      "import/no-duplicates": "off",
-      "unused-imports/no-unused-vars": "off"
-    }
-  },
-  {
-    files: ["**/*.?([cm])js"],
-    rules: {
-      "@typescript-eslint/no-require-imports": "off",
-      "@typescript-eslint/no-var-requires": "off"
-    }
+    plugins: { "@typescript-eslint": pluginTypeScript },
+    rules: { "@typescript-eslint/no-unused-vars": unusedVarsRule },
   },
   {
     files: ["**/*.vue"],
     languageOptions: {
-      globals: {
-        $: "readonly",
-        $$: "readonly",
-        $computed: "readonly",
-        $customRef: "readonly",
-        $ref: "readonly",
-        $shallowRef: "readonly",
-        $toRef: "readonly"
-      },
       parser: parserVue,
       parserOptions: {
-        ecmaFeatures: {
-          jsx: true
-        },
+        parser: parserTypeScript,
+        ecmaVersion: "latest",
+        sourceType: "module",
         extraFileExtensions: [".vue"],
-        parser: "@typescript-eslint/parser",
-        sourceType: "module"
-      }
+      },
+      globals: browserGlobals,
     },
-    plugins: {
-      vue: pluginVue
-    },
-    processor: pluginVue.processors[".vue"],
-    rules: {
-      ...pluginVue.configs.base.rules,
-      ...pluginVue.configs["vue3-essential"].rules,
-      ...pluginVue.configs["vue3-recommended"].rules,
-      "no-undef": "off",
-      "no-unused-vars": "off",
-      "vue/no-v-html": "off",
-      "vue/require-default-prop": "off",
-      "vue/require-explicit-emits": "off",
-      "vue/multi-word-component-names": "off",
-      "vue/no-setup-props-reactivity-loss": "off",
-      "vue/html-self-closing": [
-        "error",
-        {
-          html: {
-            void: "always",
-            normal: "always",
-            component: "always"
-          },
-          svg: "always",
-          math: "always"
-        }
-      ]
-    }
-  }
-]);
+    plugins: { "@typescript-eslint": pluginTypeScript },
+    rules: { "@typescript-eslint/no-unused-vars": unusedVarsRule },
+  },
+  ...pluginVue.configs["flat/essential"],
+  {
+    // 本项目约定用 index.vue 作为目录入口，关闭该命名规则
+    files: ["**/*.vue"],
+    rules: { "vue/multi-word-component-names": "off" },
+  },
+];

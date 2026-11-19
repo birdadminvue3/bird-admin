@@ -1,18 +1,19 @@
 import { defineStore } from "pinia";
 import { defaultSettings } from "@/config/index";
 import { store } from "@/store";
-import { ThemeMode } from '@/enums/settings/theme'
+import { ThemeMode } from "@/enums/settings/theme";
 
-type settingType = {
+type SettingState = {
   title: string;
-  theme: string;
-  showWatermark: string;
-}
-export const useSettingStore = defineStore("bird-setting",{
-  state: (): settingType => ({
-    title: defaultSettings.Title,
+  theme: ThemeMode;
+  showWatermark: boolean;
+};
+
+export const useSettingStore = defineStore("bird-setting", {
+  state: (): SettingState => ({
+    title: defaultSettings.title,
     theme: defaultSettings.theme,
-    showWatermark: defaultSettings.showWatermark
+    showWatermark: defaultSettings.showWatermark,
   }),
   getters: {
     getTitle(state) {
@@ -23,9 +24,8 @@ export const useSettingStore = defineStore("bird-setting",{
     updateTheme(newTheme: ThemeMode) {
       this.theme = newTheme;
     },
-  }
+  },
 });
-
 
 export function useSettingStoreHook() {
   return useSettingStore(store);

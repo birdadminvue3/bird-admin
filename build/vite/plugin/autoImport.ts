@@ -7,8 +7,8 @@ export function configAutoImportPlugin() {
     resolvers: [ElementPlusResolver()],
     dts: 'src/types/auto-imports.d.ts',
     eslintrc: {
-      // 这里先设置成true然后pnpm dev 运行之后会生成 .auto-import.json 文件之后，在改为false
-      enabled: true,
+      // .auto-import.json 已生成并提交，常驻开启会导致每次启动都产生无意义 diff
+      enabled: false,
       filepath: './.auto-import.json',
       globalsPropValue: true
     }

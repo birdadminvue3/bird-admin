@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": false,
     "jsx": "preserve",
     "importHelpers": true,
@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "sourceMap": true,
+    "noEmit": true,
     "baseUrl": ".",
     "allowJs": false,
     "resolveJsonModule": true,

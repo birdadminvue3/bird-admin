@@ -35,7 +35,11 @@ const root = process.cwd()
     // 插件配置
     plugins: createVitePlugins(isBuild, configEnv),
     // 服务配置
-    server: createViteServer(Number(VITE_PORT)),
+    server: createViteServer(Number(VITE_PORT), env.VITE_API_PROXY_TARGET),
+    // 生产构建移除 console / debugger（原来拼写错误的 TerserOptions 从未生效）
+    esbuild: {
+      drop: env.VITE_DROP_CONSOLE === 'true' ? ['console', 'debugger'] : [],
+    },
     // 打包配置
     build: createViteBuild(),
   })

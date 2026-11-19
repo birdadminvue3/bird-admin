@@ -1,6 +1,5 @@
 import { ComponentSize,  ThemeMode, LanguageEnum } from "@/enums/index";
 const { pkg } = __APP_INFO__;
-console.log('pkg=========', pkg);
 
 // 检查用户的操作系统是否使用深色模式
 const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
