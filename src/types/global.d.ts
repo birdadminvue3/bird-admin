@@ -24,6 +24,7 @@ declare global {
     title: string;
     version: string;
     theme: import('@/enums/settings/theme').ThemeMode;
+    themeColor?: string;
     size: string;
     language: string;
     showWatermark: boolean;
@@ -31,8 +32,7 @@ declare global {
     showSettings?: boolean;
     showTagsView?: boolean;
     showAppLogo?: boolean;
-    layout?: 'left' | 'top' | 'mix';
-    themeColor?: string;
-    sidebarColorScheme?: 'classic-blue' | 'minimal-white';
+    layout?: import('@/enums/settings/layout').LayoutMode;
+    sidebarColorScheme?: import('@/enums/settings/theme').SidebarColor;
   }
 }

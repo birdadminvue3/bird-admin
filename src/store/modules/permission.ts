@@ -12,6 +12,11 @@ import type { MenuRoute } from "@/api/rbac/types";
 const componentMap: Record<string, () => Promise<any>> = {
   "dashboard/index": () => import("@/views/dashboard/index.vue"),
   "system/resource": () => import("@/views/system/resource/index.vue"),
+  "error/403": () => import("@/views/error/403.vue"),
+  "error/404": () => import("@/views/error/404.vue"),
+  "error/500": () => import("@/views/error/500.vue"),
+  "permission/page": () => import("@/views/permission/page.vue"),
+  "permission/button": () => import("@/views/permission/button.vue"),
 };
 
 interface PermissionState {

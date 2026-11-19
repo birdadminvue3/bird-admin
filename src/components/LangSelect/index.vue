@@ -24,6 +24,7 @@ defineProps({
   size: {
     type: String,
     required: false,
+    default: "text-18px",
   },
 });
 

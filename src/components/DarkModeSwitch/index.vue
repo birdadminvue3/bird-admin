@@ -1,8 +1,10 @@
 <template>
   <el-dropdown trigger="click" @command="handleDarkChange">
-    <el-icon :size="20">
-      <component :is="settingsStore.theme === ThemeMode.DARK ? Moon : Sunny" />
-    </el-icon>
+    <span ref="triggerRef" class="dark-mode-trigger">
+      <el-icon :size="20">
+        <component :is="settingsStore.theme === ThemeMode.DARK ? Moon : Sunny" />
+      </el-icon>
+    </span>
     <template #dropdown>
       <el-dropdown-menu>
         <el-dropdown-item
@@ -24,16 +26,20 @@
 import { useSettingStore } from "@/store";
 import { ThemeMode } from "@/enums";
 import { Moon, Sunny } from "@element-plus/icons-vue";
+import { switchThemeMode } from "@/utils/theme";
 
 const { t } = useI18n();
 const settingsStore = useSettingStore();
+/** 触发按钮，作为圆形扩散动画的圆心 */
+const triggerRef = ref<HTMLElement | null>(null);
 
-const theneList = [
+const theneList = computed(() => [
   { label: t("login.light"), value: ThemeMode.LIGHT, component: Sunny },
   { label: t("login.dark"), value: ThemeMode.DARK, component: Moon },
-];
+]);
 
 const handleDarkChange = (theme: ThemeMode) => {
-  settingsStore.updateTheme(theme);
+  if (theme === settingsStore.theme) return;
+  switchThemeMode(theme, triggerRef.value, () => settingsStore.updateTheme(theme));
 };
 </script>

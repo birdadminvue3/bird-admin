@@ -142,10 +142,10 @@ const allSections: Record<string, SectionConfig[]> = {
       update: rbac.updateMenuApi,
       remove: rbac.deleteMenuApi,
       columns: [
+        { label: "菜单名称", prop: "title", width: 220 },
         { label: "ID", prop: "id", width: 80 },
-        { label: "菜单名称", prop: "title" },
         { label: "路由路径", prop: "path" },
-        { label: "类型", prop: "type", width: 90 },
+        { label: "类型", prop: "type", width: 100 },
         { label: "权限标识", prop: "permission" },
         { label: "排序", prop: "order", width: 80 },
       ],
@@ -456,6 +456,11 @@ function renderCell(row: any, prop: string) {
   if (prop === "status" || prop === "visible") {
     return value === 1 || value === "1" ? "正常" : "停用";
   }
+  // 菜单类型：目录 / 菜单 / 按钮
+  if (prop === "type") {
+    const typeMap: Record<string, string> = { M: "目录", C: "菜单", F: "按钮" };
+    return typeMap[String(value)] ?? value ?? "-";
+  }
   if (value === 0 || value === 1) return String(value);
   return value ?? "-";
 }
@@ -491,6 +496,8 @@ sectionConfigs.value.forEach(section => void loadData(section.key));
         border
         row-key="id"
         :tree-props="{ children: 'children' }"
+        :default-expand-all="!!section.tree"
+        :indent="16"
       >
         <el-table-column v-for="column in section.columns" :key="column.prop" :label="column.label" :prop="column.prop" :width="column.width">
           <template #default="{ row }">{{ renderCell(row, column.prop) }}</template>

@@ -1,23 +1,18 @@
 /**
  * 按钮级权限指令：v-permission="'system:user:add'"
  * 也支持数组（满足其一即可）：v-permission="['system:user:edit', 'system:user:add']"
+ *
+ * 判断逻辑复用 @/utils/permission 的 hasPermission，与组件/函数方式保持一致。
  */
 import type { App, Directive } from "vue";
-import { useUserStoreHook } from "@/store/modules/user";
+import { hasPermission, type PermissionValue } from "@/utils/permission";
 
-function allowed(value: string | string[]): boolean {
-  const permissions = useUserStoreHook().permissions || [];
-  if (permissions.includes("*:*:*")) return true;
-  const required = Array.isArray(value) ? value : [value];
-  return required.some(item => permissions.includes(item));
-}
-
-const permission: Directive<HTMLElement, string | string[]> = {
+const permission: Directive<HTMLElement, PermissionValue> = {
   mounted(el, binding) {
-    el.hidden = !allowed(binding.value);
+    el.hidden = !hasPermission(binding.value);
   },
   updated(el, binding) {
-    el.hidden = !allowed(binding.value);
+    el.hidden = !hasPermission(binding.value);
   },
 };
 

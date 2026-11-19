@@ -1,82 +1,113 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useSettingStore } from "@/store/modules/settings";
+import { useTagsViewStore } from "@/store/modules/tags-view";
 import { useUserStore } from "@/store/modules/user";
 import { usePermissionStore } from "@/store/modules/permission";
-import { logoutApi } from "@/api/rbac/auth";
+import { LayoutMode } from "@/enums/index";
+import NavVertical from "./components/lay-sidebar/NavVertical.vue";
+import NavHorizontal from "./components/lay-sidebar/NavHorizontal.vue";
+import LayNavbar from "./components/lay-navbar/index.vue";
+import LayTag from "./components/lay-tag/index.vue";
+import LaySetting from "./components/lay-setting/index.vue";
 
-const route = useRoute();
-const router = useRouter();
+defineOptions({ name: "Layout" });
+
+const settingStore = useSettingStore();
+const tagsStore = useTagsViewStore();
 const userStore = useUserStore();
 const permissionStore = usePermissionStore();
+const settingVisible = ref(false);
+const { t } = useI18n();
 
-const menus = computed(() => permissionStore.menuRoutes);
-const activePath = computed(() => route.path);
+/** 内容区全屏：隐藏侧边栏、头部与页签 */
+const isFullscreen = computed(() => settingStore.contentFullscreen);
 
-async function handleLogout() {
-  await logoutApi().catch(() => undefined);
-  userStore.logout();
-  permissionStore.resetRoutes();
-  router.replace("/login");
-}
+/** 是否需要左侧栏：顶部模式 / 全屏时不显示 */
+const showSidebar = computed(() => settingStore.layout !== LayoutMode.TOP && !isFullscreen.value);
+/** 顶部模式 */
+const isTop = computed(() => settingStore.layout === LayoutMode.TOP);
+/** 混合模式 */
+const isMix = computed(() => settingStore.layout === LayoutMode.MIX);
+
+/** 退出登录时清空页签（userInfo 从有值变为 null 才处理） */
+watch(
+  () => userStore.userInfo,
+  (info, oldInfo) => {
+    if (!info && oldInfo) {
+      tagsStore.resetViews();
+      permissionStore.resetRoutes();
+    }
+  }
+);
 </script>
 
 <template>
-  <div class="app-wrapper">
-    <aside class="app-sidebar">
-      <div class="app-brand">BirdAdmin</div>
-      <el-menu :default-active="activePath" router class="app-menu">
-        <template v-for="menu in menus" :key="menu.id">
-          <el-sub-menu v-if="menu.children?.length" :index="menu.path">
-            <template #title>{{ menu.meta.title }}</template>
-            <el-menu-item v-for="child in menu.children" :key="child.id" :index="child.path">
-              {{ child.meta.title }}
-            </el-menu-item>
-          </el-sub-menu>
-          <el-menu-item v-else :index="menu.path">
-            {{ menu.meta.title }}
-          </el-menu-item>
-        </template>
-      </el-menu>
-    </aside>
+  <div
+    class="app-layout"
+    :class="{
+      'layout-top': isTop,
+      'layout-mix': isMix,
+      'sidebar-collapsed': settingStore.isCollapse,
+      'is-fullscreen': isFullscreen,
+    }"
+  >
+    <div class="app-main-row">
+      <NavVertical v-if="showSidebar" />
 
-    <section class="app-body">
-      <header class="app-header">
-        <span>{{ userStore.userInfo?.nickname || "未登录" }}</span>
-        <span class="app-roles">{{ userStore.roles.join(", ") }}</span>
-        <el-button link type="primary" @click="handleLogout">退出登录</el-button>
-      </header>
-      <main class="app-content">
-        <router-view />
-      </main>
-    </section>
+      <section class="app-body">
+        <!-- top / mix：菜单 + 工具栏拼成单层通栏头部；全屏时隐藏 -->
+        <div
+          v-if="!isFullscreen && (isTop || isMix)"
+          class="app-header-wrap app-header-inline"
+          :class="{ 'is-fixed': settingStore.fixedHeader }"
+        >
+          <!-- 混合模式：折叠按钮置于头部最左，位置与左侧模式一致 -->
+          <button
+            v-if="isMix"
+            class="app-collapse-btn"
+            type="button"
+            :title="settingStore.isCollapse ? t('navbar.expandMenu') : t('navbar.collapseMenu')"
+            @click="settingStore.toggleSidebar()"
+          >
+            <el-icon><component :is="settingStore.isCollapse ? 'Expand' : 'Fold'" /></el-icon>
+          </button>
+          <NavHorizontal />
+          <LayNavbar @open-setting="settingVisible = true" />
+        </div>
+        <!-- left：仅工具栏（含面包屑）；全屏时隐藏 -->
+        <div
+          v-else-if="!isFullscreen"
+          class="app-header-wrap"
+          :class="{ 'is-fixed': settingStore.fixedHeader }"
+        >
+          <LayNavbar @open-setting="settingVisible = true" />
+        </div>
+
+        <LayTag v-if="settingStore.showTagsView" />
+
+        <main class="app-content">
+          <router-view />
+        </main>
+      </section>
+    </div>
+
+    <LaySetting v-model="settingVisible" />
   </div>
 </template>
 
-<style lang="scss" scoped>
-.app-wrapper {
+<style scoped lang="scss">
+.app-layout {
+  height: 100vh;
   display: flex;
-  min-height: 100vh;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--el-bg-color-page);
 }
 
-.app-sidebar {
-  width: 220px;
-  flex: 0 0 220px;
-  border-right: 1px solid var(--el-border-color);
-}
-
-.app-brand {
-  height: 60px;
+.app-main-row {
+  flex: 1;
   display: flex;
-  align-items: center;
-  padding: 0 20px;
-  font-size: 18px;
-  font-weight: 700;
-  border-bottom: 1px solid var(--el-border-color);
-}
-
-.app-menu {
-  border-right: none;
+  min-height: 0;
 }
 
 .app-body {
@@ -86,23 +117,51 @@ async function handleLogout() {
   flex-direction: column;
 }
 
-.app-header {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  justify-content: flex-end;
-  padding: 0 24px;
-  border-bottom: 1px solid var(--el-border-color);
+.app-header-wrap {
+  z-index: 9;
+  background: var(--header-bg);
+
+  /* 固定头部：吸顶于内容滚动之上 */
+  &.is-fixed {
+    position: sticky;
+    top: 0;
+  }
+
+  /* top / mix：菜单与工具栏横向拼成单层通栏 */
+  &.app-header-inline {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--el-border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
 }
 
-.app-roles {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
+/* 混合模式：折叠按钮置于头部最左，与左侧模式位置一致 */
+.app-collapse-btn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  align-self: center;
+  margin-left: 12px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--el-text-color-regular);
+  font-size: 18px;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--el-fill-color-light);
+    color: var(--el-color-primary);
+  }
 }
 
 .app-content {
   flex: 1;
-  padding: 20px;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
 }
 </style>

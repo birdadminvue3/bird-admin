@@ -90,7 +90,7 @@ export interface SysDictData {
   remark: string;
 }
 
-/** 菜单种子：id 1/2 为父级，3~8 为系统管理子菜单，3xx 为按钮权限 */
+/** 菜单种子：id 1/2/9/13 为父级，3~8 系统管理，10~12 异常页面，14~15 权限管理，3xx/15xx 为按钮权限 */
 export const menuSeed: SysMenu[] = [
   // ---------- 父级菜单 ----------
   {
@@ -209,6 +209,123 @@ export const menuSeed: SysMenu[] = [
     keepAlive: 1,
   },
 
+  // ---------- 异常页面 ----------
+  {
+    id: 9,
+    parentId: 0,
+    name: "ErrorPage",
+    title: "异常页面",
+    path: "/error",
+    component: "",
+    icon: "ep:warning-filled",
+    type: "M",
+    permission: "error:page",
+    order: 3,
+    visible: 1,
+    keepAlive: 0,
+    redirect: "/error/403",
+  },
+  {
+    id: 10,
+    parentId: 9,
+    name: "Error403",
+    title: "403",
+    path: "/error/403",
+    component: "error/403",
+    icon: "ep:circle-close",
+    type: "C",
+    permission: "error:403",
+    order: 1,
+    visible: 1,
+    keepAlive: 0,
+  },
+  {
+    id: 11,
+    parentId: 9,
+    name: "Error404",
+    title: "404",
+    path: "/error/404",
+    component: "error/404",
+    icon: "ep:document",
+    type: "C",
+    permission: "error:404",
+    order: 2,
+    visible: 1,
+    keepAlive: 0,
+  },
+  {
+    id: 12,
+    parentId: 9,
+    name: "Error500",
+    title: "500",
+    path: "/error/500",
+    component: "error/500",
+    icon: "ep:warning",
+    type: "C",
+    permission: "error:500",
+    order: 3,
+    visible: 1,
+    keepAlive: 0,
+  },
+
+  // ---------- 权限管理（演示模块）----------
+  {
+    id: 13,
+    parentId: 0,
+    name: "PermissionManage",
+    title: "权限管理",
+    path: "/permission",
+    component: "",
+    icon: "ep:lock",
+    type: "M",
+    permission: "permission:manage",
+    order: 4,
+    visible: 1,
+    keepAlive: 0,
+    redirect: "/permission/page",
+  },
+  {
+    id: 14,
+    parentId: 13,
+    name: "PermissionPage",
+    title: "页面权限",
+    path: "/permission/page",
+    component: "permission/page",
+    icon: "ep:key",
+    type: "C",
+    permission: "permission:page:view",
+    order: 1,
+    visible: 1,
+    keepAlive: 0,
+  },
+  {
+    id: 15,
+    parentId: 13,
+    name: "PermissionButton",
+    title: "按钮权限",
+    path: "/permission/button",
+    component: "permission/button",
+    icon: "ep:pointer",
+    type: "C",
+    permission: "permission:button:view",
+    order: 2,
+    visible: 1,
+    keepAlive: 0,
+  },
+  // 演示用按钮级权限码：不同角色授权不同，用于演示按钮显隐
+  {
+    id: 1501, parentId: 15, name: "", title: "新增按钮", path: "", component: "", icon: "",
+    type: "F", permission: "permission:btn:add", order: 1, visible: 0, keepAlive: 0,
+  },
+  {
+    id: 1502, parentId: 15, name: "", title: "编辑按钮", path: "", component: "", icon: "",
+    type: "F", permission: "permission:btn:edit", order: 2, visible: 0, keepAlive: 0,
+  },
+  {
+    id: 1503, parentId: 15, name: "", title: "删除按钮", path: "", component: "", icon: "",
+    type: "F", permission: "permission:btn:delete", order: 3, visible: 0, keepAlive: 0,
+  },
+
   // ---------- 按钮级权限 ----------
   ...buttonMenus(3, "菜单", "menu"),
   ...buttonMenus(4, "角色", "role", ["assign"]),
@@ -256,6 +373,20 @@ function buttonMenus(
 
 const ALL_MENU_IDS = menuSeed.map(item => item.id);
 
+/** 异常页面：所有角色均可访问（403 本就是给无权限用户展示的） */
+const ERROR_MENU_IDS = [9, 10, 11, 12];
+
+/**
+ * 权限管理演示模块：父级 + 两个页面（13/14/15）所有角色可访问；
+ * 按钮权限码（1501/1502/1503）按角色递减，用于演示「切换角色后按钮显隐变化」：
+ * - 超级管理员：`*:*:*` 全量（见 ALL_MENU_IDS）
+ * - 系统管理员：add + edit
+ * - 审计员：仅 add
+ * - 访客：无按钮权限
+ */
+const PERMISSION_PAGE_IDS = [13, 14, 15];
+const PERMISSION_BTN_IDS = [1501, 1502, 1503];
+
 /** 系统管理常用菜单 + 按钮（不含岗位、字典，用于演示角色差异） */
 const SYSTEM_PARTIAL_IDS = [
   2, 3, 4, 5, 6,
@@ -284,7 +415,7 @@ export const roleSeed: SysRole[] = [
     dataScope: 2,
     status: 1,
     remark: "可管理菜单/角色/用户/部门，不能管理岗位与字典",
-    menuIds: SYSTEM_PARTIAL_IDS,
+    menuIds: [...SYSTEM_PARTIAL_IDS, ...ERROR_MENU_IDS, ...PERMISSION_PAGE_IDS, ...PERMISSION_BTN_IDS.slice(0, 2)],
     deptIds: [1, 2, 3, 4, 5, 6],
     createTime: "2026-01-02 10:20:00",
   },
@@ -295,7 +426,7 @@ export const roleSeed: SysRole[] = [
     dataScope: 4,
     status: 1,
     remark: "只读：控制台 + 用户列表，无新增/修改/删除按钮",
-    menuIds: [1, 2, 5],
+    menuIds: [1, 2, 5, ...ERROR_MENU_IDS, ...PERMISSION_PAGE_IDS, ...PERMISSION_BTN_IDS.slice(0, 1)],
     deptIds: [1],
     createTime: "2026-02-11 14:35:00",
   },
@@ -305,8 +436,8 @@ export const roleSeed: SysRole[] = [
     code: "visitor",
     dataScope: 5,
     status: 1,
-    remark: "仅可访问控制台",
-    menuIds: [1],
+    remark: "仅可访问控制台与异常页面",
+    menuIds: [1, ...ERROR_MENU_IDS, ...PERMISSION_PAGE_IDS],
     deptIds: [],
     createTime: "2026-03-08 11:00:00",
   },

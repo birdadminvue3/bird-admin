@@ -1,0 +1,24 @@
+/* 异常页面公共样式（403 / 404 / 500） */
+.error-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.error-code {
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 4px;
+}
+
+.error-desc {
+  margin: 12px 0 4px;
+  font-size: 15px;
+  color: var(--el-text-color-regular);
+}

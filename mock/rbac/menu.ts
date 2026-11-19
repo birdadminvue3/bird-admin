@@ -7,6 +7,7 @@ import {
   guard,
   isGuardError,
   buildMenuTree,
+  buildMenuTreeForList,
   first,
   nextId,
   numericId,
@@ -51,10 +52,8 @@ export default defineFakeRoute([
       const result = guard(headers, "system:menu:list");
       if (isGuardError(result)) return result.error;
       const keyword = first(query.keyword) || "";
-      const list = db.menus
-        .filter(item => !keyword || item.title.includes(keyword) || item.permission.includes(keyword))
-        .sort((a, b) => a.id - b.id);
-      return ok(list);
+      // 返回树形结构：命中关键字时保留祖先链，供 el-table 的 tree-props 渲染层级
+      return ok(buildMenuTreeForList(keyword));
     },
   },
   {

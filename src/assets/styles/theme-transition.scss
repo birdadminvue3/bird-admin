@@ -1,0 +1,21 @@
+/**
+ * 主题切换特效（View Transitions API）
+ * 关闭新旧快照的默认淡入淡出，改由 utils/theme.ts 中的 clip-path 圆形扩散驱动。
+ */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal;
+}
+
+/* 切到暗色时旧（亮色）快照盖在上层，配合 reverse 的收缩动画由外向内揭开暗色 */
+html.dark::view-transition-old(root) {
+  z-index: 100;
+}
+
+/* 主题按钮切换时的细微过渡，让非 View Transition 浏览器也有一点点反馈 */
+.theme-btn,
+.color-btn {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}

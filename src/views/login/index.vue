@@ -15,7 +15,7 @@
       <!-- 登录页主体 -->
       <div flex-1 flex-center>
         <div
-          class="p-4xl w-full h-auto sm:w-400px border-rd-10px sm:h-480px shadow-[var(--el-box-shadow-light)] backdrop-blur-3px bg-#fff"
+          class="login-card p-4xl w-full h-auto sm:w-400px border-rd-10px sm:h-480px backdrop-blur-3px"
         >
         <div w-full flex flex-col items-center>
             <!-- logo -->
@@ -201,11 +201,11 @@ function checkCapsLock(event: KeyboardEvent) {
   justify-content: center;
   width: 100%;
   height: 100%;
-  /* 渐变背景 */
-  background: linear-gradient(to top left,#ffe29f,#ffa99f,#ff719a);
-  // background-image: linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%);
+  /* 渐变背景（明亮主题） */
+  background: linear-gradient(to top left, #ffe29f, #ffa99f, #ff719a);
   /* 溢出隐藏 */
   overflow: hidden;
+  transition: background 0.3s ease;
   .action-bar {
     position: fixed;
     top: 10px;
@@ -216,7 +216,7 @@ function checkCapsLock(event: KeyboardEvent) {
     align-items: center;
     justify-content: center;
     font-size: 1.125rem;
-    // z-index: 9;
+    color: var(--el-text-color-primary);
     @media (max-width: 480px) {
       top: 10px;
       right: auto;
@@ -228,10 +228,19 @@ function checkCapsLock(event: KeyboardEvent) {
       right: 40px;
     }
   }
+  .login-card {
+    /* 跟随 Element Plus 主题变量，暗黑模式自动切到深色卡片（浮层色，比页面底色略亮） */
+    color: var(--el-text-color-primary);
+    background-color: var(--el-bg-color-overlay);
+    border: 1px solid transparent;
+    box-shadow: var(--el-box-shadow-light);
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease,
+      color 0.3s ease;
+  }
   .container{
     z-index: 9;
     .login-form{
-      background: #fff;
+      background: var(--el-bg-color);
       min-width: 300px;
       height: auto;
       min-height: 380px;
@@ -329,6 +338,16 @@ function checkCapsLock(event: KeyboardEvent) {
       transform: translateY(-120vh) rotate(600deg);
     }
   }
+}
+
+/* ===== 暗黑模式：深色渐变背景 + 深色卡片描边 ===== */
+html.dark .login-container {
+  background: linear-gradient(to top left, #1b2634, #111722 48%, #070a11);
+}
+
+html.dark .login-container .login-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
 }
 
 </style>

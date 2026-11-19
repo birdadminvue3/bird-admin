@@ -1,4 +1,4 @@
-import { ComponentSize,  ThemeMode, LanguageEnum } from "@/enums/index";
+import { ComponentSize, ThemeMode, LanguageEnum, LayoutMode, SidebarColor } from "@/enums/index";
 const { pkg } = __APP_INFO__;
 
 // 检查用户的操作系统是否使用深色模式
@@ -11,6 +11,12 @@ export const defaultSettings: AppSettings = {
   version: pkg.version,
   // 主题，根据操作系统的色彩方案自动选择
   theme: mediaQueryList.matches ? ThemeMode.DARK : ThemeMode.LIGHT,
+  // 默认主题色（Element Plus 主色）
+  themeColor: "#409EFF",
+  // 默认菜单布局
+  layout: LayoutMode.LEFT,
+  // 默认侧边栏配色
+  sidebarColorScheme: SidebarColor.CLASSIC_BLUE,
   // 组件大小 default | medium | small | large
   size: ComponentSize.DEFAULT,
   // 语言

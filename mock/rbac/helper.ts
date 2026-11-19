@@ -21,6 +21,8 @@ import {
  * 因此把数据库挂到 globalThis 上，作为同一进程内的单例。
  */
 const DB_KEY = "__BIRD_ADMIN_RBAC_DB_V1__";
+/** 种子签名：种子内容一变（新增/修改菜单等）即触发 DB 重建，避免 dev server 不重启时用到旧数据 */
+const DB_SIGNATURE_KEY = "__BIRD_ADMIN_RBAC_DB_SIGNATURE_V1__";
 
 function createDb() {
   return {
@@ -34,8 +36,40 @@ function createDb() {
   };
 }
 
+/**
+ * 基于所有种子数据计算签名（FNV-1a 32 位，无额外依赖）。
+ * 只要任一 seed 变动，签名即变化；模块重新执行时会据此判定需要重建 DB。
+ */
+function seedSignature(): string {
+  const raw = JSON.stringify([
+    menuSeed,
+    roleSeed,
+    userSeed,
+    deptSeed,
+    postSeed,
+    dictTypeSeed,
+    dictDataSeed,
+  ]);
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < raw.length; i++) {
+    hash ^= raw.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return `${raw.length}-${(hash >>> 0).toString(16)}`;
+}
+
 const globalRef = globalThis as typeof globalThis & Record<string, any>;
-export const db: ReturnType<typeof createDb> = globalRef[DB_KEY] || (globalRef[DB_KEY] = createDb());
+const signature = seedSignature();
+
+// 首次加载或种子发生变化时重建内存 DB；签名一致则保留运行时 CRUD 的数据。
+// 注意：vite-plugin-fake-server 为每个 mock 文件单独 bundle，helper 顶层会执行多次，
+// 这里通过 globalThis 上的签名保证只有种子真正变化时才重建，避免互相覆盖。
+if (globalRef[DB_SIGNATURE_KEY] !== signature || !globalRef[DB_KEY]) {
+  globalRef[DB_KEY] = createDb();
+  globalRef[DB_SIGNATURE_KEY] = signature;
+}
+
+export const db: ReturnType<typeof createDb> = globalRef[DB_KEY];
 
 export const TOKEN_PREFIX = "eyJhbGciOiJIUzUxMiJ9.";
 export const REFRESH_SUFFIX = "Refresh";
@@ -168,14 +202,47 @@ export function buildRouteTree(user: SysUser): Array<Record<string, any>> {
 
 /** 完整菜单树（含按钮），用于角色授权页 */
 export function buildMenuTree(): Array<SysMenu & { children?: SysMenu[] }> {
+  return buildMenuTreeFrom(db.menus);
+}
+
+/**
+ * 菜单管理列表专用：返回带 children 的树形结构。
+ * 关键字命中时保留其祖先链，避免子节点因父级被过滤而丢失、层级断裂。
+ */
+export function buildMenuTreeForList(keyword?: string): Array<SysMenu & { children?: SysMenu[] }> {
+  const kw = (keyword || "").trim();
+  if (!kw) return buildMenuTreeFrom(db.menus);
+
+  const lower = kw.toLowerCase();
+  const matched = db.menus.filter(menu =>
+    menu.title.toLowerCase().includes(lower) ||
+    menu.permission.toLowerCase().includes(lower) ||
+    menu.path.toLowerCase().includes(lower)
+  );
+
+  // 命中项 + 所有祖先一并保留
+  const keep = new Set<number>();
+  matched.forEach(menu => {
+    keep.add(menu.id);
+    let parentId = menu.parentId;
+    while (parentId) {
+      keep.add(parentId);
+      parentId = db.menus.find(item => item.id === parentId)?.parentId || 0;
+    }
+  });
+  return buildMenuTreeFrom(db.menus.filter(menu => keep.has(menu.id)));
+}
+
+/** 从给定菜单集合构建树（内部复用） */
+function buildMenuTreeFrom(list: SysMenu[]): Array<SysMenu & { children?: SysMenu[] }> {
   const toNode = (menu: SysMenu): SysMenu & { children?: SysMenu[] } => {
-    const children = db.menus
+    const children = list
       .filter(item => item.parentId === menu.id)
       .sort((a, b) => a.order - b.order)
       .map(toNode);
     return { ...menu, ...(children.length ? { children } : {}) };
   };
-  return db.menus
+  return list
     .filter(menu => menu.parentId === 0)
     .sort((a, b) => a.order - b.order)
     .map(toNode);

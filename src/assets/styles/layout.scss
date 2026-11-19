@@ -1,0 +1,160 @@
+/**
+ * 全局布局与主题样式
+ * 由 main.ts 统一引入。变量作用域为 :root / html.dark / body[data-layout]。
+ */
+
+:root {
+  --header-height: 60px;
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 64px;
+
+  /* 默认侧边栏配色：经典蓝 */
+  --sidebar-bg: #1d2535;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #e5eaf3;
+  --sidebar-text-secondary: #a8b2c4;
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
+  --sidebar-active-bg: var(--el-color-primary);
+  --sidebar-active-text: #fff;
+  --header-bg: var(--el-bg-color);
+}
+
+/* ===== 侧边栏配色：极简白 ===== */
+html[data-sidebar-color="minimal-white"] {
+  --sidebar-bg: var(--el-bg-color);
+  --sidebar-border: var(--el-border-color-light);
+  --sidebar-text: var(--el-text-color-primary);
+  --sidebar-text-secondary: var(--el-text-color-regular);
+  --sidebar-hover: var(--el-fill-color-light);
+  --sidebar-active-bg: var(--el-color-primary-light-9);
+  --sidebar-active-text: var(--el-color-primary);
+}
+
+/* ===== 侧边栏宽度由布局模式驱动 ===== */
+body[data-layout="left"] .lay-sidebar,
+body[data-layout="mix"] .lay-sidebar {
+  width: var(--sidebar-width);
+  flex: 0 0 var(--sidebar-width);
+}
+
+/* 注意：sidebar-collapsed 类挂在 .app-layout 上（见 layout/index.vue），不在 body 上 */
+body[data-layout="left"] .app-layout.sidebar-collapsed .lay-sidebar,
+body[data-layout="mix"] .app-layout.sidebar-collapsed .lay-sidebar {
+  width: var(--sidebar-collapsed-width);
+  flex-basis: var(--sidebar-collapsed-width);
+}
+
+/* 顶部菜单模式没有侧边栏 */
+body[data-layout="top"] .lay-sidebar {
+  display: none;
+}
+
+/* ===== 侧边栏菜单配色 ===== */
+.lay-sidebar-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--sidebar-text-secondary);
+  --el-menu-hover-bg-color: var(--sidebar-hover);
+  --el-menu-active-color: var(--sidebar-active-text);
+  --el-menu-item-height: 46px;
+  --el-menu-sub-item-height: 46px;
+  --el-menu-base-level-padding: 16px;
+
+  .el-menu-item.is-active {
+    background: var(--sidebar-active-bg) !important;
+    color: var(--sidebar-active-text) !important;
+  }
+
+  .el-sub-menu__title {
+    color: var(--sidebar-text-secondary);
+
+    &:hover {
+      background: var(--sidebar-hover) !important;
+    }
+  }
+
+  .el-menu-item,
+  .el-sub-menu__title {
+    color: var(--sidebar-text-secondary);
+
+    &:hover {
+      color: var(--sidebar-text);
+    }
+  }
+}
+
+/* ===== 混合模式：左侧二级菜单视觉优化 ===== */
+.lay-sidebar.is-mix {
+  .mix-title {
+    .mix-title-icon {
+      flex: 0 0 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      color: var(--el-color-primary);
+    }
+
+    .mix-title-text {
+      color: var(--sidebar-text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+  }
+
+  .lay-sidebar-menu.mix-menu {
+    padding-top: 8px;
+
+    /* 二级菜单项增加左侧留白，形成层级感 */
+    .el-menu-item {
+      margin: 2px 8px;
+      border-radius: 6px;
+      height: 42px;
+      line-height: 42px;
+      padding-left: 20px !important;
+
+      &.is-active {
+        background: var(--sidebar-active-bg) !important;
+        color: var(--sidebar-active-text) !important;
+      }
+    }
+  }
+}
+
+/* ===== 折叠态下隐藏文字，避免溢出 ===== */
+.lay-sidebar .el-menu--collapse {
+  .el-sub-menu__title span,
+  .el-menu-item span {
+    display: none;
+  }
+}
+
+/* ===== 暗黑主题：Element Plus 官方 .dark + 自定义覆盖 ===== */
+html.dark {
+  --sidebar-bg: #14161c;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-text: #e5eaf3;
+  --sidebar-text-secondary: #9aa4b8;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --header-bg: var(--el-bg-color-overlay);
+}
+
+html.dark[data-sidebar-color="minimal-white"] {
+  --sidebar-bg: var(--el-bg-color-overlay);
+  --sidebar-border: var(--el-border-color-light);
+  --sidebar-text: var(--el-text-color-primary);
+  --sidebar-text-secondary: var(--el-text-color-regular);
+  --sidebar-hover: var(--el-fill-color-light);
+}
+
+/* 暗黑下正文区域背景 */
+html.dark .app-content {
+  background: var(--el-bg-color-page);
+}
+
+/* ===== 顶栏菜单在暗黑下的下拉配色兜底 ===== */
+.lay-horizontal-menu {
+  --el-menu-bg-color: transparent;
+  --el-menu-text-color: var(--el-text-color-regular);
+  --el-menu-hover-bg-color: var(--el-fill-color-light);
+  --el-menu-active-color: var(--el-color-primary);
+}
