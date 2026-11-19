@@ -19,11 +19,8 @@ const permissionStore = usePermissionStore();
 const settingVisible = ref(false);
 const { t } = useI18n();
 
-/** 内容区全屏：隐藏侧边栏、头部与页签 */
-const isFullscreen = computed(() => settingStore.contentFullscreen);
-
-/** 是否需要左侧栏：顶部模式 / 全屏时不显示 */
-const showSidebar = computed(() => settingStore.layout !== LayoutMode.TOP && !isFullscreen.value);
+/** 是否需要左侧栏：顶部模式不显示 */
+const showSidebar = computed(() => settingStore.layout !== LayoutMode.TOP);
 /** 顶部模式 */
 const isTop = computed(() => settingStore.layout === LayoutMode.TOP);
 /** 混合模式 */
@@ -48,16 +45,15 @@ watch(
       'layout-top': isTop,
       'layout-mix': isMix,
       'sidebar-collapsed': settingStore.isCollapse,
-      'is-fullscreen': isFullscreen,
     }"
   >
     <div class="app-main-row">
       <NavVertical v-if="showSidebar" />
 
       <section class="app-body">
-        <!-- top / mix：菜单 + 工具栏拼成单层通栏头部；全屏时隐藏 -->
+        <!-- top / mix：菜单 + 工具栏拼成单层通栏头部 -->
         <div
-          v-if="!isFullscreen && (isTop || isMix)"
+          v-if="isTop || isMix"
           class="app-header-wrap app-header-inline"
           :class="{ 'is-fixed': settingStore.fixedHeader }"
         >
@@ -74,9 +70,9 @@ watch(
           <NavHorizontal />
           <LayNavbar @open-setting="settingVisible = true" />
         </div>
-        <!-- left：仅工具栏（含面包屑）；全屏时隐藏 -->
+        <!-- left：仅工具栏（含面包屑） -->
         <div
-          v-else-if="!isFullscreen"
+          v-else
           class="app-header-wrap"
           :class="{ 'is-fixed': settingStore.fixedHeader }"
         >

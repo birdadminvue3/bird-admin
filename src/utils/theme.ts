@@ -33,24 +33,36 @@ function mix(from: number[], to: number[], ratio: number): string {
 
 const WHITE = [255, 255, 255];
 const BLACK = [0, 0, 0];
+/** Element Plus 暗黑模式页面底色 #141414，作为暗色下浅色梯度的混合基准 */
+const DARK_BASE = [20, 20, 20];
 
-/** 应用 Element Plus 主题色及其渐变梯度 */
-export function applyThemeColor(color: string) {
+/**
+ * 应用 Element Plus 主题色及其渐变梯度
+ *
+ * 梯度规则与 Element Plus 保持一致：
+ * - 亮色：light-N = 主色向白色混合 N×10%
+ * - 暗色：light-N = 主色向 #141414 混合 N×10%（越深表示层级越弱），dark-2 反向提亮
+ */
+export function applyThemeColor(
+  color: string,
+  isDark: boolean = document.documentElement.classList.contains("dark")
+) {
   if (!/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color)) return;
   const root = document.documentElement;
   const rgb = hexToRgb(color);
+  const base = isDark ? DARK_BASE : WHITE;
   root.style.setProperty("--el-color-primary", color);
   const lightSteps: Array<[number, number]> = [
-    [3, 0.7],
+    [3, 0.3],
     [5, 0.5],
-    [7, 0.3],
-    [8, 0.2],
-    [9, 0.1],
+    [7, 0.7],
+    [8, 0.8],
+    [9, 0.9],
   ];
   lightSteps.forEach(([step, ratio]) => {
-    root.style.setProperty(`--el-color-primary-light-${step}`, mix(rgb, WHITE, ratio));
+    root.style.setProperty(`--el-color-primary-light-${step}`, mix(rgb, base, ratio));
   });
-  root.style.setProperty("--el-color-primary-dark-2", mix(rgb, BLACK, 0.2));
+  root.style.setProperty("--el-color-primary-dark-2", mix(rgb, isDark ? WHITE : BLACK, 0.2));
 }
 
 /** Element Plus 暗黑变量依赖 html.dark，这里统一判断是否应处于暗色 */

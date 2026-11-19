@@ -29,8 +29,6 @@ export type SettingState = {
   showWatermark: boolean;
   /** 组件尺寸 */
   size: ComponentSize;
-  /** 内容区全屏（隐藏侧边栏与头部，仅保留页签与内容；不持久化） */
-  contentFullscreen: boolean;
 };
 
 const STORAGE_PREFIX = "bird-setting";
@@ -67,7 +65,6 @@ export const useSettingStore = defineStore("bird-setting", {
     tagsStyle: tagsStyle.value,
     showWatermark: showWatermark.value,
     size: size.value,
-    contentFullscreen: false,
   }),
   getters: {
     getTitle(state) {
@@ -132,10 +129,6 @@ export const useSettingStore = defineStore("bird-setting", {
       this.size = value;
       size.value = value;
     },
-    /** 切换内容区全屏（隐藏侧边栏与头部） */
-    toggleContentFullscreen(value?: boolean) {
-      this.contentFullscreen = value ?? !this.contentFullscreen;
-    },
     /** 恢复默认设置（不修改系统标题/版本） */
     resetSettings() {
       this.updateTheme(defaultSettings.theme);
@@ -150,7 +143,6 @@ export const useSettingStore = defineStore("bird-setting", {
       this.setTagsStyle(TagsStyle.SMART);
       this.updateShowWatermark(defaultSettings.showWatermark);
       this.setSize(defaultSettings.size as ComponentSize);
-      this.contentFullscreen = false;
     },
   },
 });

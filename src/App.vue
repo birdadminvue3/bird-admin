@@ -47,7 +47,11 @@ applyAllSettings({
 // 响应式同步各项设置到 document
 watch(
   () => settingStore.theme,
-  value => applyThemeMode(value)
+  value => {
+    applyThemeMode(value);
+    // 明暗切换后浅色梯度需要按新底色重算（暗色下向深色混合）
+    applyThemeColor(settingStore.themeColor);
+  }
 );
 watch(
   () => settingStore.themeColor,
@@ -69,7 +73,10 @@ watch(
   value => {
     stopWatchSystem?.();
     if (value === ThemeMode.AUTO) {
-      stopWatchSystem = watchSystemTheme(() => applyThemeMode(ThemeMode.AUTO));
+      stopWatchSystem = watchSystemTheme(() => {
+        applyThemeMode(ThemeMode.AUTO);
+        applyThemeColor(settingStore.themeColor);
+      });
     }
   },
   { immediate: true }
