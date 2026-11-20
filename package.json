@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "sync": "node scripts/sync-repos.mjs",
+    "sync:dry": "node scripts/sync-repos.mjs --dry-run"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
