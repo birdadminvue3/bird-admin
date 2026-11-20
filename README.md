@@ -28,8 +28,8 @@
     <a href="https://pinia.vuejs.org/" target="_blank">
         <img src="https://img.shields.io/badge/Pinia-3.x-blue?color=91aac3&labelColor=439EFD" alt="pinia">
     </a>
-    <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">
-        <img src="https://img.shields.io/badge/Apache2.0-license-blue?color=91aac3&labelColor=439EFD" alt="license">
+    <a href="https://opensource.org/license/MIT" target="_blank">
+        <img src="https://img.shields.io/badge/MIT-License-blue?color=91aac3&labelColor=439EFD" alt="license">
     </a>
 </p>
 
