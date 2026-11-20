@@ -1,12 +1,21 @@
 <br />
 <div align="center">
-    <img src="./src/assets/readme/logo.png" alt="" />
+    <img src="./src/assets/readme/logo.png" alt="BirdAdmin" />
     <h1 style="font-size: 36px;color: #2c3e50;font-weight: 600;margin: 0 0 6px 0;">BirdAdmin</h1>
     <p style="font-size: 17px;color: #6a8bad;margin-bottom: 10px;">使用流行技术栈快速创建商业级后台管理系统</p>
-    <a href="https://gitee.com/web_akai/bird-admin" target="_blank">Gitee仓库</a>
+    <p>
+        <a href="https://gitee.com/web_akai/bird-admin" target="_blank">Gitee</a> ·
+        <a href="https://github.com/birdadminvue3/bird-admin" target="_blank">GitHub</a> ·
+        <a href="#安装使用">快速开始</a> ·
+        <a href="#常见问题与已知限制">常见问题</a> ·
+        <a href="#更新日志">更新日志</a>
+    </p>
 </div>
 <br />
 <p align="center">
+    <a href="https://github.com/birdadminvue3/bird-admin" target="_blank">
+        <img src="https://img.shields.io/badge/Version-1.0.0-brightgreen?color=91aac3&labelColor=439EFD" alt="version">
+    </a>
     <a href="https://nodejs.org/zh-cn/download" target="_blank">
         <img src="https://img.shields.io/badge/Node.js-20.19%2B%20%2F%2022.12%2B-brightgreen?color=91aac3&labelColor=439EFD" alt="node">
     </a>
@@ -43,21 +52,31 @@
 
 - [介绍](#介绍)
 - [主要特性](#主要特性)
+- [技术栈](#技术栈)
 - [项目预览](#项目预览)
 - [安装使用](#安装使用)
+- [浏览器支持](#浏览器支持)
 - [开发指南](#开发指南)
 - [多仓库同步](#多仓库同步)
 - [接入真实后端](#接入真实后端)
+- [生产部署](#生产部署)
 - [实现状态与路线图](#实现状态与路线图)
 - [常见问题与已知限制](#常见问题与已知限制)
+- [贡献指南](#贡献指南)
+- [更新日志](#更新日志)
 - [联系我们](#联系我们)
 - [特别鸣谢](#特别鸣谢)
+- [版权信息](#版权信息)
+- [支持项目](#支持项目)
+- [免责声明](#免责声明)
 
 ### 介绍
 
 🌈 BirdAdmin 是基于 `Vue 3.5 + Vite 7 + TypeScript 5.8 + Pinia 3 + Element Plus + UnoCSS` 的后台管理系统前端，支持按用户权限动态注册路由、按钮级鉴权、三种菜单布局、暗黑主题、多页签与中英切换，无需授权即可免费商用。
 
-> 本仓库目前是**纯前端脚手架**，没有附带后端工程。所有 `/api/*` 接口由 `vite-plugin-fake-server` 在**开发环境**提供本地 Mock，生产构建不会注入任何假数据或演示账号。介绍中提到的 `Node.js``Next.js` `Spring Boot` 等后端属于规划能力，尚未实现；接真实后端的方法见 [接入真实后端](#接入真实后端)。
+当前版本 **v1.0.0**，遵循 MIT 协议。适合用作中后台项目的起步模板：克隆后 `pnpm install && pnpm dev` 即可看到完整的登录 → 动态路由 → 权限菜单 → CRUD 流程，也可在当前结构上删减业务模块后接入自己的后端。
+
+> 本仓库目前是**纯前端脚手架**，没有附带后端工程。所有 `/api/*` 接口由 `vite-plugin-fake-server` 在**开发环境**提供本地 Mock，生产构建不会注入任何假数据或演示账号。规划中的 `Node.js`、`Next.js`、`Spring Boot` 等后端尚未实现；接真实后端的方法见 [接入真实后端](#接入真实后端)。
 
 ### 主要特性
 
@@ -65,7 +84,7 @@
 `Vue 3.5`（`<script setup>` 组合式 API）、`Vite 7`、`TypeScript 5.8`、`Pinia 3`、`vue-router 4`、`Element Plus 2.10`、`UnoCSS`、`vue-i18n 11`、`@vueuse/core`、`Sass`。组件与 API 按需自动导入（`unplugin-vue-components` / `unplugin-auto-import`），本地 SVG 通过 `vite-svg-loader` 组件化、通过 UnoCSS `i-svg:图标名` 直接使用。
 
 **🔀 前后端分离：**
-仓库只含前端代码，通过统一的 `axios` 请求层与后端通信：接口前缀由 `VITE_API_BASE_URL` 统一配置，响应统一为 `{ code, data, message }`，认证走 `Authorization: Bearer <token>`。开发期可直接用本地 Mock 联调，也可配置 `VITE_API_PROXY_TARGET` 代理到真实后端，前端开发者无需掌握任何后端代码。（邀您：[和我们一起](https://qm.qq.com/cgi-bin/qm/qr?k=mtO25dYqAb6TvQabT3a32GpM-ymBgzyQ&jump_from=webapi&authKey=IdNeGCdGWY3agi7eUniBkHG7ME98B3hD2dBUFoLcBLtYrKEl1RfComEn+0sdrM+I) ）
+仓库只含前端代码，通过统一的 `axios` 请求层与后端通信：接口前缀由 `VITE_API_BASE_URL` 统一配置，响应统一为 `{ code, data, message }`，认证走 `Authorization: Bearer <token>`。开发期可直接用本地 Mock 联调，也可配置 `VITE_API_PROXY_TARGET` 代理到真实后端，前端开发者无需掌握任何后端代码。技术交流群见 [联系我们](#联系我们)。
 
 **✨ 高颜值：**
 提供 `左侧 / 顶部 / 混合` 三种菜单布局，支持经典蓝与极简白侧栏配色、明亮/暗黑/跟随系统三种主题、自定义主题色（含 `View Transition` 圆形扩散切换动画）、水印、组件尺寸、固定头部、Logo 与面包屑开关，全部设置可持久化并一键复制/恢复默认。
@@ -79,19 +98,40 @@
 **💖 其他杂项：**
 内置 403 / 404 / 500 异常页、动态页面标题、NProgress 进度条、控制台欢迎横幅（仅 dev）、ESLint 10 flat config、构建信息统计插件。更多特性等你探索...
 
+### 技术栈
+
+| 分类 | 依赖 | 版本 | 用途 |
+| --- | --- | --- | --- |
+| 框架 | [vue](https://github.com/vuejs/core) | 3.5.18 | `<script setup>` 组合式 API |
+| 路由 | [vue-router](https://github.com/vuejs/vue-router) | 4.5.1 | Hash 模式，登录后 `addRoute` 注入动态路由 |
+| 状态 | [pinia](https://github.com/vuejs/pinia) | 3.0.3 | app / settings / user / permission / tags-view |
+| 构建 | [vite](https://github.com/vitejs/vite) | 7.1.2 | 配置拆分为 resolve / plugin / server / build |
+| 语言 | [typescript](https://github.com/microsoft/TypeScript) | 5.8.3 | `vue-tsc --noEmit` 严格类型检查 |
+| UI | [element-plus](https://github.com/element-plus/element-plus) | 2.10.7 | 按需自动导入，暗色走 CSS 变量 |
+| 样式 | [unocss](https://github.com/unocss/unocss) / [sass-embedded](https://github.com/sass/sass) | 66.5.0 / 1.90.0 | 原子类 + 局部 SCSS |
+| 国际化 | [vue-i18n](https://github.com/intlify/vue-i18n) | 11.1.11 | `legacy: false` 组合式 API |
+| 请求 | [axios](https://github.com/axios/axios) | 1.11.0 | 拦截器、重试、取消、离线队列 |
+| 工具 | [@vueuse/core](https://github.com/vueuse/vueuse) / [dayjs](https://github.com/iamkun/dayjs) | 13.7.0 / 1.11.13 | 响应式工具与时间格式化 |
+| Mock | [vite-plugin-fake-server](https://github.com/condorheroblog/vite-plugin-fake-server) | 2.2.0 | 仅开发环境生效，构建时移除 |
+| 规范 | [eslint](https://github.com/eslint/eslint) | 10.15.0 | flat config + vue / typescript 插件 |
+
+运行环境：Node.js `^20.19.0 || >=22.12.0`，包管理器 `pnpm 10.x`。
+
 ### 项目预览
 
-> 仓库暂未收录界面截图，可 `pnpm dev` 后访问 `http://localhost:9094/#/login` 直接体验。
+> 以下截图取自本地开发环境（亮色主题、中文语言）。在线演示站尚未部署，可 `pnpm dev` 后访问 `http://localhost:9094/#/login` 体验。
 
 |  |  |
 |---------------------|---------------------|
 |![登录](./src/assets/readme/login.png)|![控制台](./src/assets/readme/dashboard.png)|
 |![菜单管理](./src/assets/readme/menu.png)|![404](./src/assets/readme/404.png)|
 
+**功能模块一览：**
+
 | 模块 | 入口路径 | 说明 |
 | --- | --- | --- |
-| 登录 | `/login` | 账号密码登录、大小写锁定提示、暗色主题与语言切换 |
-| 控制台 | `/dashboard` | 登录后的默认首页（`redirect` 指向首个可访问页面） |
+| 登录 | `/login` | 账号密码登录、大写锁定提示、暗色主题与语言切换（验证码 / 记住我代码已保留但默认注释） |
+| 控制台 | `/dashboard` | 登录后的默认落地页，当前为占位页，可替换为自己的业务首页 |
 | 系统管理 | `/system/menu` `/system/role` `/system/user` `/system/dept` `/system/post` `/system/dict` | 六类资源由同一套 schema 渲染，支持树形表格、分页筛选、CRUD、角色授权 / 用户分配角色 |
 | 异常页面 | `/error/403` `/error/404` `/error/500` | 统一 `el-result` 风格；404 同时兼作路由兜底页面 |
 | 权限管理 | `/permission/page` `/permission/button` | 切换演示账号观察菜单变化；演示指令 / 组件 / 函数三种按钮鉴权 |
@@ -110,9 +150,17 @@
 
 **环境要求：** `Node.js ^20.19.0 || >=22.12.0`（见 `package.json` 的 `engines`，Vite 7 不再支持 Node 16/18）、`pnpm 10.x`。
 
+两个仓库内容完全一致，按访问速度任选其一克隆：
+
+| 平台 | Clone 地址 |
+| --- | --- |
+| Gitee（国内推荐） | `https://gitee.com/web_akai/bird-admin.git` |
+| GitHub | `https://github.com/birdadminvue3/bird-admin.git` |
+
 ```bash
-# 克隆项目
+# 克隆项目（下面二选一）
 git clone https://gitee.com/web_akai/bird-admin.git
+# git clone https://github.com/birdadminvue3/bird-admin.git
 
 # 进入项目
 cd bird-admin
@@ -137,6 +185,18 @@ pnpm run build
 pnpm run preview
 ```
 
+**可用脚本：**
+
+| 命令 | 作用 |
+| --- | --- |
+| `pnpm dev` | 启动开发服务器，`9094` 端口被占用时自动顺延 |
+| `pnpm build` | 类型检查 + 生产构建，产物输出到 `dist/` |
+| `pnpm preview` | 本地预览 `dist/` 产物 |
+| `pnpm typecheck` | 仅做 `vue-tsc --noEmit` 类型检查 |
+| `pnpm lint` / `pnpm lint:fix` | ESLint 检查 / 自动修复 |
+| `pnpm sync` | 同步推送到 Gitee 与 GitHub，见 [多仓库同步](#多仓库同步) |
+| `pnpm sync:dry` | 只打印将要执行的 git 命令，不实际推送 |
+
 **环境变量**（`.env` 通用，`.env.development` / `.env.production` 按模式覆盖）：
 
 | 变量 | 开发环境 | 生产环境 | 说明 |
@@ -147,13 +207,17 @@ pnpm run preview
 | `VITE_API_PROXY_TARGET` | 空 | 空 | 非空时启用 `/api` 开发代理，且会 `rewrite` 去掉 `/api` 前缀；留空则走本地 Mock |
 | `VITE_DROP_CONSOLE` | `false` | `true` | 生产构建移除 `console` / `debugger`（配置在 `vite.config.ts` 顶层 `esbuild.drop`） |
 
-#### 💯 学习交流加 QQ 群
+### 浏览器支持
 
-> 请加以下群号，感谢老哥们支持！
+| 浏览器 | 版本 | 说明 |
+| --- | --- | --- |
+| Chrome / Edge | 88+ | 推荐；主题切换的圆形扩散动画需 111+（`document.startViewTransition`） |
+| Firefox | 78+ | 动画自动降级为直接切换，功能不受影响 |
+| Safari | 14+ | 同上 |
+| IE | 不支持 | 依赖 ES Module 与现代 CSS |
 
-群号：[829514092](https://qm.qq.com/cgi-bin/qm/qr?k=mtO25dYqAb6TvQabT3a32GpM-ymBgzyQ&jump_from=webapi&authKey=IdNeGCdGWY3agi7eUniBkHG7ME98B3hD2dBUFoLcBLtYrKEl1RfComEn+0sdrM+I)
-
-<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=mtO25dYqAb6TvQabT3a32GpM-ymBgzyQ&jump_from=webapi&authKey=IdNeGCdGWY3agi7eUniBkHG7ME98B3hD2dBUFoLcBLtYrKEl1RfComEn+0sdrM+I"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="BirdAdmin前端技术交流群" title="BirdAdmin前端技术交流群"></a>
+- 采用 Hash 路由（`/#/login`），部署到任意静态服务器都不需要额外配置 history 回退。
+- 系统开启「减少动态效果」（`prefers-reduced-motion`）时，主题切换与页面过渡动画会自动关闭。
 
 ### 开发指南
 
@@ -162,30 +226,37 @@ pnpm run preview
 ```text
 bird-admin/
 ├── build/vite/              # Vite 配置拆分：resolve / plugin / server / build
-│   └── vite/plugin/         # 自动导入、UnoCSS、Mock、构建信息插件
+│   └── plugin/              # 自动导入、UnoCSS、Mock、构建信息插件
 ├── mock/rbac/               # 仅 dev 生效的 RBAC 接口与内存种子数据
 │   ├── data.ts              # 菜单 / 角色 / 用户 / 部门 / 岗位 / 字典种子
 │   ├── helper.ts            # globalThis 内存 DB、鉴权、树构造、分页、种子签名
-│   └── auth|menu|role|user|dept|post|dict.ts
+│   ├── auth.ts              # 登录、刷新 token、用户资料、动态路由
+│   └── menu|role|user|dept|post|dict.ts
+├── scripts/
+│   └── sync-repos.mjs       # Gitee + GitHub 双仓库同步脚本
 ├── src/
 │   ├── api/                 # 类型化接口客户端（auth.ts + rbac/*）
-│   ├── assets/              # 图标、SVG、登录背景、样式（reset/layout/theme-transition）
+│   ├── assets/
+│   │   ├── readme/          # README 截图与 logo
+│   │   ├── svg/             # 本地图标（preserve-color/ 为保留原色）
+│   │   └── styles/          # reset / layout / theme-transition 等全局样式
 │   ├── components/          # Auth、CommonWrapper、DarkModeSwitch、LangSelect
 │   ├── config/              # 默认外观设置
 │   ├── directive/           # v-permission 指令
-│   ├── enums/               # 布局 / 主题 / 页签风格 / 语言枚举
+│   ├── enums/settings/      # 布局 / 主题 / 页签风格 / 语言枚举
 │   ├── layout/              # 三种布局组装 + 侧栏 / 顶栏 / 页签 / 设置抽屉
 │   ├── locales/             # vue-i18n 语言包与菜单标题翻译 composable
 │   ├── plugins/             # i18n、Element Plus 图标、权限指令注册
-│   ├── router/              # 守卫、静态路由、菜单树工具函数
+│   ├── router/              # 全局守卫、静态路由、菜单树工具函数
 │   ├── store/modules/       # app / settings / user / permission / tags-view
 │   ├── utils/
 │   │   ├── request/         # axios 封装：拦截器、token、取消、loading、离线队列
 │   │   ├── permission.ts    # 按钮权限判断
 │   │   ├── theme.ts         # 主题应用与 View Transition 切换
 │   │   └── pageTitle.ts     # 动态页面标题
-│   └── views/               # login / dashboard / system / permission / error
-├── .env*                    # 环境变量
+│   └── views/               # login / dashboard / system / permission / error / empty
+├── .env*                    # 环境变量（.env / .env.development / .env.production）
+├── LICENSE                  # MIT 许可证
 ├── uno.config.ts            # UnoCSS 预设、快捷类与本地 SVG 图标集合
 └── vite.config.ts           # Vite 入口配置
 ```
@@ -305,6 +376,83 @@ pnpm sync:dry                   # 只打印将要执行的命令，不实际推�
 4. 401 时请求层会用 `POST /auth/refresh-token` 刷新并重放原请求；刷新失败会清空 token 并跳转 `/#/login`。
 5. 无需删除 `mock/`：`configMockPlugin(isBuild)` 仅在 `vite build` 时返回 `null`，生产包不含 Mock 代码与演示账号。
 
+### 生产部署
+
+`pnpm build` 产出的 `dist/` 是纯静态文件，静态服务器、对象存储或 CDN 都可以直接托管。
+
+**1. Nginx 示例（推荐）**
+
+```nginx
+server {
+    listen       80;
+    server_name  admin.example.com;
+    root         /var/www/bird-admin/dist;
+    index        index.html;
+
+    # 入口文件不缓存，避免发版后仍加载旧资源
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+    }
+
+    # 带 hash 的静态资源可长期缓存
+    location /static/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # 接口反向代理（可选；也可让 VITE_API_BASE_URL 直连后端域名）
+    location /api/ {
+        proxy_pass       http://127.0.0.1:8080/;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    }
+
+    # 当前使用 hash 路由，这一条并非必需，保留可兼容将来切到 history 模式
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+**2. 部署到子路径**
+
+站点不在域名根目录时（如 `https://example.com/admin/`），构建前把 `VITE_BASE_PATH` 改成 `/admin/`：
+
+```bash
+# macOS / Linux
+VITE_BASE_PATH=/admin/ pnpm build
+
+# Windows PowerShell
+$env:VITE_BASE_PATH="/admin/"; pnpm build
+```
+
+**3. Docker（可选）**
+
+```dockerfile
+FROM node:22-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+```
+
+**4. 发布前检查清单**
+
+- [ ] `.env.production` 的 `VITE_API_BASE_URL` 已指向真实后端
+- [ ] 后端已实现 [Mock 接口清单](#mock-接口清单) 中的接口，响应结构一致
+- [ ] `pnpm typecheck` 与 `pnpm lint` 均通过
+- [ ] 浏览器验证登录、刷新页面（动态路由重建）、退出登录三条主链路
+- [ ] 确认 `dist/` 内不含演示账号与 Mock 数据
+- [ ] 首屏偏慢时检查网络面板：`build/vite/build.ts` 已按 `node_modules` 顶层包拆 vendor，警告阈值放宽到 2000 kB
+
+> 生产构建会移除 `console` / `debugger`（`VITE_DROP_CONSOLE=true`）且不生成 sourcemap；如需排查线上问题，临时把该变量改为 `false` 重新构建。
+
 ### 实现状态与路线图
 
 **已实现（可直接运行）**
@@ -313,13 +461,14 @@ pnpm sync:dry                   # 只打印将要执行的命令，不实际推�
 - 认证与路由守卫：登录、token 持久化 / 过期判断、并发刷新订阅、401 重放、离线队列、重复请求取消、hash 路由兜底 404。
 - RBAC：菜单 / 角色 / 用户 / 部门 / 岗位 / 字典六类资源的 Mock CRUD，角色授权、用户分配角色、重置密码、状态切换，按用户权限下发动态路由与按钮权限。
 - 界面：三种布局、暗黑主题与主题色、View Transition 切换特效、三种页签风格与完整页签操作、设置抽屉、水印、中英双语、动态页面标题、403/404/500、权限演示页。
-- 验证情况：`pnpm lint` 无错误、`pnpm build` 成功；dev 环境已对登录、刷新、22 项只读 / 权限断言与 33 项 CRUD / 授权断言做过接口级验证；生产包已确认无 Mock 凭据与 console 横幅。
+- 验证情况：`pnpm lint` 无错误、`pnpm build` 成功；dev 环境已对登录、刷新、22 项只读 / 权限断言与 33 项 CRUD / 授权断言做过接口级验证；页签与权限管理模块改造后已重新执行 lint / build；生产包已确认无 Mock 凭据与 console 横幅。
+- 文档与许可：根目录 [MIT `LICENSE`](./LICENSE)、完整 README、Gitee/GitHub 双仓库同步脚本。
 
 **尚未实现 / 规划中**
 
-- `Node.js``Next.js` `Spring Boot` 或其他真实后端、数据库持久化与可视化权限配置（当前权限数据仅在 dev 内存中）。
+- `Node.js` / `Next.js` / `Spring Boot` 等真实后端、数据库持久化与可视化权限配置（当前权限数据仅在 dev 内存中）。
 - 在线演示站、验证码 / 记住我 / 忘记密码（登录页相关代码已注释保留）、图表大屏（ECharts）、富文本、文件上传等业务模块。
-- 单元测试 / E2E、CI 流水线，以及仓库根目录的 `LICENSE` 文件（见 [版权信息](#版权信息)）。
+- 单元测试 / E2E 与 CI 流水线。
 
 ### 常见问题与已知限制
 
@@ -332,12 +481,39 @@ pnpm sync:dry                   # 只打印将要执行的命令，不实际推�
 | token 安全 | 目前存于 `localStorage`（`AUTH_TOKEN` / `REFRESH_TOKEN` / `TOKEN_EXPIRES_AT`），存在 XSS 风险；生产环境建议改为 `httpOnly` Cookie 并配合 CSRF 防护。 |
 | 主题切换没有动画？ | 圆形扩散依赖 `document.startViewTransition`，不支持的浏览器或开启「减少动态效果」时自动降级为直接切换。 |
 | 语言切换后菜单没翻译？ | 检查 `src/locales/modules/*.ts` 的 `menus` 下是否有对应中文原文词条；未登记时会回退显示中文。 |
+| 改了角色权限，页面没变化？ | 动态路由只在登录与刷新时通过 `/auth/routes` 拉取，改完权限需退出重登或刷新页面才会生效。 |
+| 页签 / 布局错乱，想恢复默认？ | 清除 `localStorage` 中的 `bird-setting-*`、`bird-tags-views`、`bird-tags-cache` 后刷新；或在设置抽屉点「恢复默认」。 |
+| 部署后直接访问子路由 404？ | 当前为 hash 路由，地址形如 `/#/system/menu`，服务器 root 指向 `dist/` 即可；若改成 history 模式，需要额外配置 `try_files` 回退到 `index.html`。 |
+| 换了主题色，部分地方还是蓝色？ | 这些位置大概率写死了色值，改成 `var(--el-color-primary)` 或 `var(--el-color-primary-light-N)` 即可跟随主题。 |
+
+### 贡献指南
+
+欢迎提 Issue 与 PR，流程尽量保持简单：
+
+1. Fork 仓库，从 `develop` 切出分支：`git checkout -b feat/your-feature`。
+2. 提交前本地跑通 `pnpm typecheck` 与 `pnpm lint`（仓库暂未接入 CI）。
+3. 提交信息使用 `feat: ` / `fix: ` / `docs: ` / `chore: ` 前缀，一个提交只做一件事。
+4. 向 `develop` 分支发起 PR，说明改动点与验证方式；涉及界面的请附亮色 / 暗色截图。
+5. 合并后如需同步主干：`git checkout master && git merge --ff-only develop`，再执行 `pnpm sync --all-branches`。
+
+新增页面、菜单与权限码的做法见 [权限体系与新增页面](#权限体系与新增页面)。请不要提交 `.env.local`、个人 Token 或 `.workbuddy/` 下的本地数据。
+
+### 更新日志
+
+| 版本 | 日期 | 主要内容 |
+| --- | --- | --- |
+| v1.0.0 | 2026-11-20 | 首个正式版本：三种菜单布局、动态路由 RBAC、按钮级鉴权、六类资源 CRUD、三种页签风格与完整页签操作、暗黑主题与 View Transition 切换动画、中英双语、403/404/500、设置抽屉、Gitee/GitHub 双仓库同步脚本 |
+
+后续计划见 [实现状态与路线图](#实现状态与路线图)。
 
 ### 联系我们
 
 - 演示站：**暂无在线演示站**，请 `pnpm dev` 本地运行体验；演示账号见 [项目预览](#项目预览)
-- [Gitee 仓库](https://gitee.com/web_akai/bird-admin)
+- [Gitee 仓库](https://gitee.com/web_akai/bird-admin) ｜ [GitHub 仓库](https://github.com/birdadminvue3/bird-admin)
 - [官方邮箱 web_bird@qq.com](mailto:web_bird@qq.com)
+- 技术交流 QQ 群：[829514092](https://qm.qq.com/cgi-bin/qm/qr?k=mtO25dYqAb6TvQabT3a32GpM-ymBgzyQ&jump_from=webapi&authKey=IdNeGCdGWY3agi7eUniBkHG7ME98B3hD2dBUFoLcBLtYrKEl1RfComEn+0sdrM+I)
+
+<a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=mtO25dYqAb6TvQabT3a32GpM-ymBgzyQ&jump_from=webapi&authKey=IdNeGCdGWY3agi7eUniBkHG7ME98B3hD2dBUFoLcBLtYrKEl1RfComEn+0sdrM+I"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="BirdAdmin前端技术交流群" title="BirdAdmin前端技术交流群"></a>
 
 ### 特别鸣谢
 
@@ -358,8 +534,8 @@ Copyright (c) 2026 前端很开门。
 
 ### 支持项目
 
-💕 无需捐赠，如果觉得项目不错，或者已经在使用了，希望你可以去 [Gitee](https://gitee.com/web_akai/bird-admin.git) 帮我点个 ⭐ Star，这将是对我极大的鼓励与支持。
+💕 无需捐赠。如果觉得项目不错，或者已经在使用了，希望你可以去 [Gitee](https://gitee.com/web_akai/bird-admin) 或 [GitHub](https://github.com/birdadminvue3/bird-admin) 帮我点个 ⭐ Star，这将是对我极大的鼓励与支持。
 
 ### 免责声明
 
-🚫 禁止使用本项目从事一切违法犯罪活动。作者不承担任何法律责任，特此声明
+🚫 禁止使用本项目从事一切违法犯罪活动。作者不承担任何法律责任，特此声明。
